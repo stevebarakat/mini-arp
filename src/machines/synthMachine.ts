@@ -79,7 +79,7 @@ const createEffectsChain = () => {
 export const synthMachine = setup({
   types: {
     context: {} as {
-      synth: Tone.Synth | undefined;
+      synth: Tone.AMSynth | undefined;
       effects: Tone.ToneAudioNode[] | undefined;
     },
     events: {} as { type: "CREATE_SYNTH" } | { type: "DISPOSE_SYNTH" },
@@ -93,7 +93,7 @@ export const synthMachine = setup({
   },
   entry: assign(() => {
     const effectsChain = createEffectsChain();
-    const synth = new Tone.Synth(SYNTH_CONFIG).connect(effectsChain.input);
+    const synth = new Tone.AMSynth(SYNTH_CONFIG).connect(effectsChain.input);
     return {
       synth,
       effects: effectsChain.effects,

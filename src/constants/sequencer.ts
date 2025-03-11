@@ -51,17 +51,28 @@ export const MAX_TEMPO = 200;
 export const DEFAULT_TEMPO = 120;
 
 export const SYNTH_CONFIG = {
+  harmonicity: 3, // Ratio between carrier and modulator frequencies
   oscillator: {
-    type: "fatsquare" as const, // More aggressive square wave
-    spread: 60, // Wider spread for more intensity
-    count: 5, // More oscillators
+    type: "fatsquare" as const,
+    spread: 60,
+    count: 5,
   },
   envelope: {
-    attack: 0.005, // Faster attack
+    attack: 0.005,
     decay: 0.3,
     sustain: 0.4,
     release: 0.6,
   },
-  volume: -8, // Reduce volume a bit more for headroom
-  detune: 10, // More detune for extra thickness
+  modulation: {
+    type: "square" as const, // Modulator waveform
+    phase: 0,
+  },
+  modulationEnvelope: {
+    attack: 0.05,
+    decay: 0.2,
+    sustain: 0.3,
+    release: 0.4,
+  },
+  volume: -8,
+  detune: 10,
 };
