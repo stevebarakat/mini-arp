@@ -5,7 +5,7 @@ import {
   STEPS,
   transposeNote,
 } from "../constants/sequencer";
-import { setup, assign } from "xstate";
+import { setup, assign, fromCallback } from "xstate";
 import * as Tone from "tone";
 import { DEFAULT_TEMPO } from "../constants/sequencer";
 
@@ -53,7 +53,8 @@ type SequencerEvent =
   | { type: "SET_ROOT_NOTE"; note: string }
   | { type: "UPDATE_TEMPO"; tempo: number }
   | { type: "TOGGLE_CELL"; rowIndex: number; colIndex: number }
-  | { type: "STEP_CHANGE"; step: number };
+  | { type: "STEP_CHANGE"; step: number }
+  | { type: "STORE_STEP_TRACKER_ID"; id: number };
 
 type SequencerContext = {
   note: string;
@@ -64,12 +65,24 @@ type SequencerContext = {
   sequence: Tone.Sequence | null;
   grid: Grid;
   pitch: number;
+  stepTrackerId: number | null;
 };
 
 export const sequencerMachine = setup({
   types: {
     context: {} as SequencerContext,
     events: {} as SequencerEvent,
+  },
+  actors: {
+    stepTracker: fromCallback(({ sendBack }) => {
+      const transport = Tone.getTransport();
+      const id = transport.scheduleRepeat(() => {
+        const step = Math.floor(transport.ticks / 96) % 8;
+        sendBack({ type: "STEP_CHANGE", step });
+      }, "8n");
+
+      return () => transport.clear(id);
+    }),
   },
 }).createMachine({
   id: "sequencer",
@@ -83,6 +96,7 @@ export const sequencerMachine = setup({
     sequence: null,
     grid: DEFAULT_PATTERN,
     pitch: DEFAULT_PITCH,
+    stepTrackerId: null,
   },
   entry: assign({
     synth: () => {
@@ -180,11 +194,20 @@ export const sequencerMachine = setup({
       },
     },
     playing: {
+      invoke: {
+        src: "stepTracker",
+        id: "stepTracker",
+      },
       on: {
         STOP: "stopped",
         STEP_CHANGE: {
           actions: assign({
             currentStep: ({ event }) => event.step,
+          }),
+        },
+        STORE_STEP_TRACKER_ID: {
+          actions: assign({
+            stepTrackerId: ({ event }) => event.id,
           }),
         },
       },
