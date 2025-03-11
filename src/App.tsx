@@ -3,13 +3,22 @@ import { useSequencer } from "./hooks/useSequencer";
 import { Controls } from "./components/Controls";
 import { SequencerGrid } from "./components/SequencerGrid";
 import { TempoControl } from "./components/TempoControl";
+import { PitchControl } from "./components/PitchControl";
 
 function App() {
   const [currentStep, setCurrentStep] = useState(-1);
-  const { isPlaying, grid, tempo, togglePlayback, toggleCell, updateTempo } =
-    useSequencer({
-      onStepChange: setCurrentStep,
-    });
+  const {
+    isPlaying,
+    grid,
+    tempo,
+    pitchShift,
+    togglePlayback,
+    toggleCell,
+    updateTempo,
+    updatePitchShift,
+  } = useSequencer({
+    onStepChange: setCurrentStep,
+  });
 
   return (
     <div className="container">
@@ -24,7 +33,13 @@ function App() {
           onToggleCell={toggleCell}
         />
 
-        <TempoControl tempo={tempo} onTempoChange={updateTempo} />
+        <div className="controls-container">
+          <TempoControl tempo={tempo} onTempoChange={updateTempo} />
+          <PitchControl
+            pitchShift={pitchShift}
+            onPitchChange={updatePitchShift}
+          />
+        </div>
       </div>
     </div>
   );

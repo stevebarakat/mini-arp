@@ -5,6 +5,8 @@ import {
   STEPS,
   SYNTH_CONFIG,
   DEFAULT_TEMPO,
+  DEFAULT_PITCH_SHIFT,
+  transposeNote,
 } from "../constants/sequencer";
 
 export type Grid = boolean[][];
@@ -22,6 +24,7 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
   );
   const [synth, setSynth] = useState<Tone.Synth | null>(null);
   const [tempo, setTempo] = useState(DEFAULT_TEMPO);
+  const [pitchShift, setPitchShift] = useState(DEFAULT_PITCH_SHIFT);
   const sequenceRef = useRef<Tone.Sequence | null>(null);
 
   useEffect(() => {
@@ -44,7 +47,7 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
 
   // Create or update sequence when grid changes
   useEffect(() => {
-    if (!synth) return; // Only check for synth, remove isPlaying check
+    if (!synth) return;
 
     // Dispose of previous sequence if it exists
     if (sequenceRef.current) {
@@ -55,7 +58,9 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
       (time, step) => {
         grid.forEach((row, rowIndex) => {
           if (row[step]) {
-            synth.triggerAttackRelease(NOTES[rowIndex], "8n", time);
+            const baseNote = NOTES[rowIndex];
+            const transposedNote = transposeNote(baseNote, pitchShift);
+            synth.triggerAttackRelease(transposedNote, "8n", time);
           }
         });
         onStepChange(step);
@@ -66,7 +71,6 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
 
     sequenceRef.current = sequence;
 
-    // Only start if we're playing
     if (isPlaying) {
       sequence.start(0);
     }
@@ -74,7 +78,7 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
     return () => {
       sequence.dispose();
     };
-  }, [grid, synth, isPlaying, onStepChange]);
+  }, [grid, synth, isPlaying, onStepChange, pitchShift]);
 
   const startPattern = useCallback(() => {
     if (!synth || !sequenceRef.current) return;
@@ -120,12 +124,18 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
     Tone.Transport.bpm.value = newTempo;
   };
 
+  const updatePitchShift = (newPitchShift: number) => {
+    setPitchShift(newPitchShift);
+  };
+
   return {
     isPlaying,
     grid,
     tempo,
+    pitchShift,
     togglePlayback,
     toggleCell,
     updateTempo,
+    updatePitchShift,
   };
 }
