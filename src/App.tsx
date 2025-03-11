@@ -8,7 +8,7 @@ import { PitchControl } from "./components/PitchControl";
 function App() {
   const [currentStep, setCurrentStep] = useState(-1);
   const {
-    isPlaying,
+    state,
     grid,
     tempo,
     pitchShift,
@@ -25,7 +25,10 @@ function App() {
       <div className="sequencer">
         <h1>Tone.js Arpeggiator</h1>
 
-        <Controls isPlaying={isPlaying} onPlayClick={togglePlayback} />
+        <Controls
+          isPlaying={state.matches("playing")}
+          onPlayClick={togglePlayback}
+        />
 
         <SequencerGrid
           grid={grid}

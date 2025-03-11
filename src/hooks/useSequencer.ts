@@ -4,10 +4,11 @@ import {
   NOTES,
   STEPS,
   SYNTH_CONFIG,
-  DEFAULT_TEMPO,
   DEFAULT_PITCH_SHIFT,
   transposeNote,
 } from "../constants/sequencer";
+import { transportMachine } from "../machines/transportMachine";
+import { useMachine } from "@xstate/react";
 
 export type Grid = boolean[][];
 
@@ -16,14 +17,14 @@ interface UseSequencerProps {
 }
 
 export function useSequencer({ onStepChange }: UseSequencerProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [state, send] = useMachine(transportMachine);
+  const { tempo } = state.context;
   const [grid, setGrid] = useState<Grid>(() =>
     Array(NOTES.length)
       .fill(null)
       .map(() => Array(STEPS).fill(false))
   );
   const [synth, setSynth] = useState<Tone.Synth | null>(null);
-  const [tempo, setTempo] = useState(DEFAULT_TEMPO);
   const [pitchShift, setPitchShift] = useState(DEFAULT_PITCH_SHIFT);
   const sequenceRef = useRef<Tone.Sequence | null>(null);
 
@@ -71,31 +72,31 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
 
     sequenceRef.current = sequence;
 
-    if (isPlaying) {
+    if (state.matches("playing")) {
       sequence.start(0);
     }
 
     return () => {
       sequence.dispose();
     };
-  }, [grid, synth, isPlaying, onStepChange, pitchShift]);
+  }, [grid, synth, state, onStepChange, pitchShift]);
 
   const startPattern = useCallback(() => {
     if (!synth || !sequenceRef.current) return;
 
-    Tone.Transport.bpm.value = tempo;
+    Tone.getTransport().bpm.value = tempo;
     sequenceRef.current.start(0);
-    Tone.Transport.start();
+    Tone.getTransport().start();
   }, [synth, tempo]);
 
   const togglePlayback = async () => {
-    if (isPlaying) {
-      Tone.Transport.stop();
-      setIsPlaying(false);
+    if (state.matches("playing")) {
+      Tone.getTransport().stop();
+      send({ type: "STOP" });
       onStepChange(-1);
     } else {
       await Tone.start();
-      setIsPlaying(true);
+      send({ type: "PLAY" });
       startPattern();
     }
   };
@@ -120,8 +121,7 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
   };
 
   const updateTempo = (newTempo: number) => {
-    setTempo(newTempo);
-    Tone.Transport.bpm.value = newTempo;
+    send({ type: "UPDATE_TEMPO", tempo: newTempo });
   };
 
   const updatePitchShift = (newPitchShift: number) => {
@@ -129,7 +129,7 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
   };
 
   return {
-    isPlaying,
+    state,
     grid,
     tempo,
     pitchShift,
