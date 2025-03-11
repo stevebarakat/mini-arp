@@ -1,5 +1,5 @@
 import { DEFAULT_PITCH, DEFAULT_PATTERN } from "../constants/sequencer";
-import { createMachine, assign } from "xstate";
+import { setup, assign } from "xstate";
 import { Grid } from "../hooks/useSequencer";
 
 type SequencerEvent =
@@ -12,18 +12,19 @@ type SequencerEvent =
 
 type SequencerContext = {
   note: string;
-  grid: Grid;
-  pitch: number;
   rootNote: string;
+  pitch: number;
+  grid: Grid;
 };
 
-export const sequencerMachine = createMachine({
+export const sequencerMachine = setup({
+  types: {
+    context: {} as SequencerContext,
+    events: {} as SequencerEvent,
+  },
+}).createMachine({
   id: "sequencer",
   initial: "stopped",
-  types: {} as {
-    context: SequencerContext;
-    events: SequencerEvent;
-  },
   context: {
     note: "C4",
     rootNote: "C4",
