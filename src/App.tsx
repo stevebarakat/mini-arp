@@ -36,7 +36,7 @@ function App() {
         />
 
         <Keyboard
-          synth={synthState.context.synth}
+          synth={synthState.context.synth as any}
           startOctave={3}
           onNotePress={setRootNote}
           isPlaying={state.matches("playing")}
