@@ -2,12 +2,16 @@ import { SequencerGrid } from "./components/SequencerGrid";
 import { TempoControl } from "./components/TempoControl";
 import { PitchControl } from "./components/PitchControl";
 import { FilterControl } from "./components/FilterControl";
+import { DelayControl } from "./components/DelayControl";
+import { ReverbControl } from "./components/ReverbControl";
+import { DistortionControl } from "./components/DistortionControl";
 import { Keyboard } from "./components/Keyboard";
 import { useMachine } from "@xstate/react";
 import { sequencerMachine } from "./machines/sequencerMachine";
 import { effectsMachine } from "./machines/effectsMachine";
 import * as Tone from "tone";
 import { useEffect, useRef } from "react";
+import { EffectType } from "./machines/effectsMachine";
 
 // Define the state values type for type safety
 type SequencerStateValue = "playing" | "stopped";
@@ -19,8 +23,21 @@ function App() {
 
   const { grid, tempo, pitch, currentStep, synth } = sequencerState.context;
 
-  const { filterFrequency, filterDepth, filterWet, filterResonance } =
-    effectsState.context;
+  const {
+    filterFrequency,
+    filterDepth,
+    filterWet,
+    filterResonance,
+    delayTime,
+    delayFeedback,
+    delayWet,
+    reverbDecay,
+    reverbPreDelay,
+    reverbWet,
+    distortionAmount,
+    distortionWet,
+    activeEffects,
+  } = effectsState.context;
 
   // Initialize effects when the app starts
   useEffect(() => {
@@ -111,6 +128,7 @@ function App() {
     }
   }
 
+  // Filter effect handlers
   function updateFilterFrequency(frequency: number) {
     effectsSend({ type: "UPDATE_FILTER_FREQUENCY", frequency });
   }
@@ -125,6 +143,62 @@ function App() {
 
   function updateFilterResonance(resonance: number) {
     effectsSend({ type: "UPDATE_FILTER_RESONANCE", resonance });
+  }
+
+  function toggleFilter(enabled: boolean) {
+    effectsSend({ type: "TOGGLE_EFFECT", effect: "autoFilter", enabled });
+  }
+
+  // Delay effect handlers
+  function updateDelayTime(delayTime: number) {
+    effectsSend({ type: "UPDATE_DELAY_TIME", delayTime });
+  }
+
+  function updateDelayFeedback(feedback: number) {
+    effectsSend({ type: "UPDATE_DELAY_FEEDBACK", feedback });
+  }
+
+  function updateDelayWet(wet: number) {
+    effectsSend({ type: "UPDATE_DELAY_WET", wet });
+  }
+
+  function toggleDelay(enabled: boolean) {
+    effectsSend({ type: "TOGGLE_EFFECT", effect: "delay", enabled });
+  }
+
+  // Reverb effect handlers
+  function updateReverbDecay(decay: number) {
+    effectsSend({ type: "UPDATE_REVERB_DECAY", decay });
+  }
+
+  function updateReverbPreDelay(preDelay: number) {
+    effectsSend({ type: "UPDATE_REVERB_PREDELAY", preDelay });
+  }
+
+  function updateReverbWet(wet: number) {
+    effectsSend({ type: "UPDATE_REVERB_WET", wet });
+  }
+
+  function toggleReverb(enabled: boolean) {
+    effectsSend({ type: "TOGGLE_EFFECT", effect: "reverb", enabled });
+  }
+
+  // Distortion effect handlers
+  function updateDistortionAmount(distortion: number) {
+    effectsSend({ type: "UPDATE_DISTORTION_AMOUNT", distortion });
+  }
+
+  function updateDistortionWet(wet: number) {
+    effectsSend({ type: "UPDATE_DISTORTION_WET", wet });
+  }
+
+  function toggleDistortion(enabled: boolean) {
+    effectsSend({ type: "TOGGLE_EFFECT", effect: "distortion", enabled });
+  }
+
+  // Helper function to check if an effect is active
+  function isEffectActive(effect: EffectType): boolean {
+    return activeEffects.includes(effect);
   }
 
   return (
@@ -150,6 +224,10 @@ function App() {
         <div className="controls-container">
           <TempoControl tempo={tempo} onTempoChange={updateTempo} />
           <PitchControl pitch={pitch} onPitchChange={updatePitch} />
+        </div>
+
+        <h2>Effects</h2>
+        <div className="effects-panel">
           <FilterControl
             frequency={filterFrequency}
             depth={filterDepth}
@@ -159,6 +237,36 @@ function App() {
             onDepthChange={updateFilterDepth}
             onWetChange={updateFilterWet}
             onResonanceChange={updateFilterResonance}
+            enabled={isEffectActive("autoFilter")}
+            onToggle={toggleFilter}
+          />
+          <DelayControl
+            delayTime={delayTime}
+            feedback={delayFeedback}
+            wet={delayWet}
+            onDelayTimeChange={updateDelayTime}
+            onFeedbackChange={updateDelayFeedback}
+            onWetChange={updateDelayWet}
+            enabled={isEffectActive("delay")}
+            onToggle={toggleDelay}
+          />
+          <ReverbControl
+            decay={reverbDecay}
+            preDelay={reverbPreDelay}
+            wet={reverbWet}
+            onDecayChange={updateReverbDecay}
+            onPreDelayChange={updateReverbPreDelay}
+            onWetChange={updateReverbWet}
+            enabled={isEffectActive("reverb")}
+            onToggle={toggleReverb}
+          />
+          <DistortionControl
+            distortion={distortionAmount}
+            wet={distortionWet}
+            onDistortionChange={updateDistortionAmount}
+            onWetChange={updateDistortionWet}
+            enabled={isEffectActive("distortion")}
+            onToggle={toggleDistortion}
           />
         </div>
       </div>

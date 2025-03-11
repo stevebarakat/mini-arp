@@ -92,6 +92,44 @@ export const FILTER_CONFIG = {
   wet: 0.5, // Mix between dry and wet signal (0-1)
 };
 
+// Configuration for the delay effect
+export const DELAY_CONFIG = {
+  delayTime: 0.25, // Delay time in seconds
+  feedback: 0.4, // Feedback amount (0-1)
+  wet: 0.3, // Mix between dry and wet signal (0-1)
+};
+
+// Configuration for the reverb effect
+export const REVERB_CONFIG = {
+  decay: 2.5, // Decay time in seconds
+  preDelay: 0.01, // Pre-delay time in seconds
+  wet: 0.3, // Mix between dry and wet signal (0-1)
+};
+
+// Configuration for the distortion effect
+export const DISTORTION_CONFIG = {
+  distortion: 0.4, // Distortion amount (0-1)
+  wet: 0.5, // Mix between dry and wet signal (0-1)
+  oversample: "4x" as "none" | "2x" | "4x", // Oversampling (none, 2x, 4x)
+};
+
+// Min and max values for effect parameters
+export const EFFECT_PARAM_RANGES = {
+  // Delay parameters
+  delayTime: { min: 0.01, max: 1 }, // Delay time range in seconds
+  feedback: { min: 0, max: 0.9 }, // Feedback range (avoiding 1.0 to prevent infinite feedback)
+
+  // Reverb parameters
+  decay: { min: 0.1, max: 10 }, // Decay time range in seconds
+  preDelay: { min: 0, max: 0.1 }, // Pre-delay time range in seconds
+
+  // Distortion parameters
+  distortion: { min: 0, max: 1 }, // Distortion amount range
+
+  // Common parameters
+  wet: { min: 0, max: 1 }, // Wet mix range for all effects
+};
+
 // Min and max values for filter parameters
 export const FILTER_PARAM_RANGES = {
   Q: { min: 0.1, max: 20 }, // Resonance range
