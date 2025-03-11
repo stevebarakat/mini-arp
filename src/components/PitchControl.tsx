@@ -1,11 +1,11 @@
 import { MIN_PITCH_SHIFT, MAX_PITCH_SHIFT } from "../constants/sequencer";
 
 interface PitchControlProps {
-  pitchShift: number;
+  pitch: number;
   onPitchChange: (shift: number) => void;
 }
 
-export function PitchControl({ pitchShift, onPitchChange }: PitchControlProps) {
+export function PitchControl({ pitch, onPitchChange }: PitchControlProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onPitchChange(parseInt(e.target.value));
   };
@@ -18,12 +18,12 @@ export function PitchControl({ pitchShift, onPitchChange }: PitchControlProps) {
         id="pitch"
         min={MIN_PITCH_SHIFT}
         max={MAX_PITCH_SHIFT}
-        value={pitchShift}
+        value={pitch}
         onChange={handleChange}
       />
       <span>
-        {pitchShift > 0 ? "+" : ""}
-        {pitchShift} semitones
+        {pitch > 0 ? "+" : ""}
+        {pitch} semitones
       </span>
     </div>
   );

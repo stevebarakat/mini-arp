@@ -11,11 +11,11 @@ function App() {
     state,
     grid,
     tempo,
-    pitchShift,
+    pitch,
     togglePlayback,
     toggleCell,
     updateTempo,
-    updatePitchShift,
+    updatePitch,
   } = useSequencer({
     onStepChange: setCurrentStep,
   });
@@ -38,10 +38,7 @@ function App() {
 
         <div className="controls-container">
           <TempoControl tempo={tempo} onTempoChange={updateTempo} />
-          <PitchControl
-            pitchShift={pitchShift}
-            onPitchChange={updatePitchShift}
-          />
+          <PitchControl pitch={pitch} onPitchChange={updatePitch} />
         </div>
       </div>
     </div>

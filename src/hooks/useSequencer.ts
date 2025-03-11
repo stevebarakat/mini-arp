@@ -4,7 +4,7 @@ import {
   NOTES,
   STEPS,
   SYNTH_CONFIG,
-  DEFAULT_PITCH_SHIFT,
+  DEFAULT_PITCH,
   transposeNote,
 } from "../constants/sequencer";
 import { transportMachine } from "../machines/transportMachine";
@@ -24,7 +24,7 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
   const { grid } = sequencerState.context;
 
   const [synth, setSynth] = useState<Tone.Synth | null>(null);
-  const [pitchShift, setPitchShift] = useState(DEFAULT_PITCH_SHIFT);
+  const [pitch, setPitch] = useState(DEFAULT_PITCH);
   const sequenceRef = useRef<Tone.Sequence | null>(null);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
         grid.forEach((row, rowIndex) => {
           if (row[step]) {
             const baseNote = NOTES[rowIndex];
-            const transposedNote = transposeNote(baseNote, pitchShift);
+            const transposedNote = transposeNote(baseNote, pitch);
             synth.triggerAttackRelease(transposedNote, "8n", time);
           }
         });
@@ -78,7 +78,7 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
     return () => {
       sequence.dispose();
     };
-  }, [grid, synth, transportState, onStepChange, pitchShift]);
+  }, [grid, synth, transportState, onStepChange, pitch]);
 
   const startPattern = useCallback(() => {
     if (!synth || !sequenceRef.current) return;
@@ -122,18 +122,18 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
     transportSend({ type: "UPDATE_TEMPO", tempo: newTempo });
   };
 
-  const updatePitchShift = (newPitchShift: number) => {
-    setPitchShift(newPitchShift);
+  const updatePitch = (newPitch: number) => {
+    setPitch(newPitch);
   };
 
   return {
     state: transportState,
     grid,
     tempo,
-    pitchShift,
+    pitch,
     togglePlayback,
     toggleCell,
     updateTempo,
-    updatePitchShift,
+    updatePitch,
   };
 }

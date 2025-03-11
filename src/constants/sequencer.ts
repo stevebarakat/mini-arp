@@ -2,7 +2,7 @@ export const BASE_NOTES = ["B", "G", "E", "C"] as const;
 export const DEFAULT_OCTAVE = 4;
 export const MIN_PITCH_SHIFT = -24; // 2 octaves down
 export const MAX_PITCH_SHIFT = 24; // 2 octaves up
-export const DEFAULT_PITCH_SHIFT = 0;
+export const DEFAULT_PITCH = 0;
 
 // Helper function to transpose a note by semitones
 export function transposeNote(note: string, semitones: number): string {
