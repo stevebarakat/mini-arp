@@ -1,0 +1,35 @@
+import { NOTES } from "../constants/sequencer";
+import type { Grid } from "../hooks/useSequencer";
+
+interface SequencerGridProps {
+  grid: Grid;
+  currentStep: number;
+  onToggleCell: (rowIndex: number, colIndex: number) => void;
+}
+
+export function SequencerGrid({
+  grid,
+  currentStep,
+  onToggleCell,
+}: SequencerGridProps) {
+  return (
+    <div className="note-grid">
+      {grid.map((row, rowIndex) => (
+        <div key={rowIndex} className="grid-container">
+          <div className="row-label">{NOTES[rowIndex]}</div>
+          <div className="note-row">
+            {row.map((isSelected, colIndex) => (
+              <div
+                key={colIndex}
+                className={`note-cell ${isSelected ? "selected" : ""} ${
+                  colIndex === currentStep ? "current" : ""
+                }`}
+                onClick={() => onToggleCell(rowIndex, colIndex)}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
