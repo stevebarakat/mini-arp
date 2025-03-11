@@ -221,3 +221,61 @@ h1 {
   font-weight: 500;
   color: #4b5563;
 }
+
+.keyboard {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+  gap: 2px;
+}
+
+.octave {
+  position: relative;
+  display: flex;
+  height: 200px;
+}
+
+.piano-key {
+  cursor: pointer;
+  transition: all 0.1s;
+  border-radius: 0 0 4px 4px;
+}
+
+.piano-key.white {
+  background: white;
+  border: 1px solid #e2e8f0;
+  width: 60px;
+  height: 200px;
+  margin-right: -20px;
+  position: relative;
+  z-index: 1;
+}
+
+.piano-key.black {
+  background: #1f2937;
+  width: 40px;
+  height: 120px;
+  margin-right: -20px;
+  position: relative;
+  z-index: 2;
+}
+
+.piano-key.white:hover {
+  background: #f1f5f9;
+}
+
+.piano-key.black:hover {
+  background: #374151;
+}
+
+.piano-key.white:active {
+  background: #e2e8f0;
+  transform: translateY(2px);
+}
+
+.piano-key.black:active {
+  background: #4b5563;
+  transform: translateY(2px);
+}
