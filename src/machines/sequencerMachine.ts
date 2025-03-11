@@ -4,6 +4,9 @@ import {
   NOTES,
   STEPS,
   transposeNote,
+  SYNTH_CONFIG,
+  FILTER_CONFIG,
+  EFFECTS_BUS,
 } from "../constants/sequencer";
 import { setup, assign, fromCallback } from "xstate";
 import * as Tone from "tone";
@@ -54,7 +57,10 @@ type SequencerEvent =
   | { type: "UPDATE_TEMPO"; tempo: number }
   | { type: "TOGGLE_CELL"; rowIndex: number; colIndex: number }
   | { type: "STEP_CHANGE"; step: number }
-  | { type: "STORE_STEP_TRACKER_ID"; id: number };
+  | { type: "STORE_STEP_TRACKER_ID"; id: number }
+  | { type: "UPDATE_FILTER_FREQUENCY"; frequency: number }
+  | { type: "UPDATE_FILTER_DEPTH"; depth: number }
+  | { type: "UPDATE_FILTER_WET"; wet: number };
 
 type SequencerContext = {
   note: string;
@@ -66,6 +72,50 @@ type SequencerContext = {
   grid: Grid;
   pitch: number;
   stepTrackerId: number | null;
+  effectsBus: Tone.Channel | null;
+  autoFilter: Tone.AutoFilter | null;
+  filterFrequency: number;
+  filterDepth: number;
+  filterWet: number;
+  channelSender: Tone.Channel | null;
+};
+
+// Helper function to ensure audio routing is properly connected
+const ensureAudioRouting = (context: SequencerContext) => {
+  if (
+    context.synth &&
+    context.autoFilter &&
+    context.effectsBus &&
+    context.channelSender
+  ) {
+    // Check if we need to reconnect
+    try {
+      // First disconnect everything to start fresh
+      context.synth.disconnect();
+      context.autoFilter.disconnect();
+      context.channelSender.disconnect();
+
+      // Connect the synth to the autoFilter
+      context.synth.connect(context.autoFilter);
+
+      // Send the autoFilter output to the named bus
+      context.autoFilter.connect(context.channelSender);
+      context.channelSender.send(EFFECTS_BUS, 0); // Send at 0dB level
+
+      console.log(
+        `Audio routing re-established: synth -> autoFilter -> "${EFFECTS_BUS}" bus -> destination`
+      );
+
+      // Make sure the autoFilter is running
+      context.autoFilter.start();
+
+      return true;
+    } catch (error) {
+      console.error("Error reconnecting audio routing:", error);
+      return false;
+    }
+  }
+  return false;
 };
 
 export const sequencerMachine = setup({
@@ -97,10 +147,132 @@ export const sequencerMachine = setup({
     grid: DEFAULT_PATTERN,
     pitch: DEFAULT_PITCH,
     stepTrackerId: null,
+    effectsBus: null,
+    autoFilter: null,
+    filterFrequency: FILTER_CONFIG.frequency,
+    filterDepth: FILTER_CONFIG.depth,
+    filterWet: FILTER_CONFIG.wet,
+    channelSender: null,
   },
   entry: assign({
-    synth: () => {
-      return new Tone.AMSynth().toDestination();
+    // First create the effects bus
+    effectsBus: () => {
+      console.log(`Creating effects bus with name "${EFFECTS_BUS}"`);
+
+      // Create a channel for the effects bus and connect it to the destination
+      const effectsBus = new Tone.Channel().toDestination();
+
+      // Register the channel as a receive point for the named bus
+      effectsBus.receive(EFFECTS_BUS);
+
+      // Set destination volume
+      Tone.Destination.volume.value = 0;
+
+      console.log(`Effects bus created and receiving on "${EFFECTS_BUS}"`);
+
+      return effectsBus;
+    },
+    // Then create the channel sender
+    channelSender: () => {
+      console.log("Creating channel sender for effects routing");
+      return new Tone.Channel();
+    },
+    // Then create the auto filter
+    autoFilter: () => {
+      console.log("Creating auto-filter with config:", FILTER_CONFIG);
+
+      // Create the auto filter effect with proper configuration
+      const autoFilter = new Tone.AutoFilter({
+        frequency: FILTER_CONFIG.frequency,
+        type: FILTER_CONFIG.type,
+        depth: FILTER_CONFIG.depth,
+        baseFrequency: FILTER_CONFIG.baseFrequency,
+        octaves: FILTER_CONFIG.octaves,
+        filter: {
+          type: FILTER_CONFIG.filter.type,
+          rolloff: FILTER_CONFIG.filter.rolloff,
+          Q: FILTER_CONFIG.filter.Q,
+        },
+        wet: FILTER_CONFIG.wet,
+      });
+
+      // Important: Start the LFO
+      autoFilter.start();
+
+      console.log("Auto-filter created with params:", {
+        frequency: autoFilter.frequency.value,
+        depth: autoFilter.depth.value,
+        wet: autoFilter.wet.value,
+      });
+
+      return autoFilter;
+    },
+    // Finally create the synth and connect everything
+    synth: ({ context }) => {
+      console.log("Creating synth");
+
+      // Create the synth
+      const synth = new Tone.AMSynth(SYNTH_CONFIG);
+
+      // We need a longer delay to ensure all components are fully initialized
+      const connectAudio = () => {
+        console.log("Checking audio components...");
+        console.log("Components status:", {
+          autoFilter: !!context.autoFilter,
+          effectsBus: !!context.effectsBus,
+          channelSender: !!context.channelSender,
+        });
+
+        if (context.autoFilter && context.effectsBus && context.channelSender) {
+          // Set up the proper audio routing with send/receive
+          console.log("Setting up audio routing with send/receive");
+
+          // First disconnect everything to start fresh
+          synth.disconnect();
+          context.autoFilter.disconnect();
+          context.channelSender.disconnect();
+
+          // Connect the synth to the autoFilter
+          synth.connect(context.autoFilter);
+
+          // Send the autoFilter output to the named bus
+          // We need to use a workaround since AutoFilter doesn't have send method directly
+          context.autoFilter.connect(context.channelSender);
+          context.channelSender.send(EFFECTS_BUS, 0); // Send at 0dB level
+
+          console.log(
+            `Audio routing established: synth -> autoFilter -> "${EFFECTS_BUS}" bus -> destination`
+          );
+
+          // Make sure the autoFilter is running
+          context.autoFilter.start();
+
+          return true;
+        } else {
+          console.warn("Not all audio components are ready yet");
+          return false;
+        }
+      };
+
+      // Try to connect immediately
+      if (!connectAudio()) {
+        // If not successful, try again with increasing delays
+        setTimeout(() => {
+          if (!connectAudio()) {
+            setTimeout(() => {
+              if (!connectAudio()) {
+                // Final fallback to direct connection if components still aren't ready
+                console.log(
+                  "Connecting synth directly to destination (no effects) - all retries failed"
+                );
+                synth.toDestination();
+              }
+            }, 500);
+          }
+        }, 200);
+      }
+
+      return synth;
     },
   }),
   exit: assign({
@@ -113,6 +285,24 @@ export const sequencerMachine = setup({
     sequence: ({ context }) => {
       if (context.sequence) {
         context.sequence.dispose();
+      }
+      return null;
+    },
+    autoFilter: ({ context }) => {
+      if (context.autoFilter) {
+        context.autoFilter.dispose();
+      }
+      return null;
+    },
+    effectsBus: ({ context }) => {
+      if (context.effectsBus) {
+        context.effectsBus.dispose();
+      }
+      return null;
+    },
+    channelSender: ({ context }) => {
+      if (context.channelSender) {
+        context.channelSender.dispose();
       }
       return null;
     },
@@ -261,6 +451,96 @@ export const sequencerMachine = setup({
               return cell;
             })
           );
+        },
+      }),
+    },
+    UPDATE_FILTER_FREQUENCY: {
+      actions: assign({
+        filterFrequency: ({ event, context }) => {
+          if (context.autoFilter) {
+            try {
+              // Set the frequency value and log it
+              context.autoFilter.frequency.value = event.frequency;
+              console.log(`Updated filter frequency to ${event.frequency}Hz`);
+
+              // Always restart the LFO to ensure it's running with the new settings
+              context.autoFilter.start();
+
+              // Ensure audio routing is properly connected
+              ensureAudioRouting(context);
+
+              // Log the current audio routing to verify connections
+              console.log("Current audio routing:", {
+                autoFilter: !!context.autoFilter,
+                effectsBus: !!context.effectsBus,
+                channelSender: !!context.channelSender,
+              });
+            } catch (error) {
+              console.error("Error updating filter frequency:", error);
+            }
+          } else {
+            console.warn("Auto-filter not available for frequency update");
+          }
+          return event.frequency;
+        },
+      }),
+    },
+    UPDATE_FILTER_DEPTH: {
+      actions: assign({
+        filterDepth: ({ event, context }) => {
+          if (context.autoFilter) {
+            try {
+              // Set the depth value and log it
+              context.autoFilter.depth.value = event.depth;
+              console.log(`Updated filter depth to ${event.depth}`);
+
+              // Always restart the LFO to ensure it's running with the new settings
+              context.autoFilter.start();
+
+              // Ensure audio routing is properly connected
+              ensureAudioRouting(context);
+
+              // Log the current audio routing to verify connections
+              console.log("Current audio routing:", {
+                autoFilter: !!context.autoFilter,
+                effectsBus: !!context.effectsBus,
+                channelSender: !!context.channelSender,
+              });
+            } catch (error) {
+              console.error("Error updating filter depth:", error);
+            }
+          } else {
+            console.warn("Auto-filter not available for depth update");
+          }
+          return event.depth;
+        },
+      }),
+    },
+    UPDATE_FILTER_WET: {
+      actions: assign({
+        filterWet: ({ event, context }) => {
+          if (context.autoFilter) {
+            try {
+              // Set the wet value and log it
+              context.autoFilter.wet.value = event.wet;
+              console.log(`Updated filter wet mix to ${event.wet}`);
+
+              // Ensure audio routing is properly connected
+              ensureAudioRouting(context);
+
+              // Log the current audio routing to verify connections
+              console.log("Current audio routing:", {
+                autoFilter: !!context.autoFilter,
+                effectsBus: !!context.effectsBus,
+                channelSender: !!context.channelSender,
+              });
+            } catch (error) {
+              console.error("Error updating filter wet mix:", error);
+            }
+          } else {
+            console.warn("Auto-filter not available for wet mix update");
+          }
+          return event.wet;
         },
       }),
     },

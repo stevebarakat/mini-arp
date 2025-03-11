@@ -1,10 +1,9 @@
 import { SequencerGrid } from "./components/SequencerGrid";
 import { TempoControl } from "./components/TempoControl";
 import { PitchControl } from "./components/PitchControl";
+import { FilterControl } from "./components/FilterControl";
 import { Keyboard } from "./components/Keyboard";
-import { EffectsPanel } from "./components/EffectsPanel";
 import { useMachine } from "@xstate/react";
-import { synthMachine } from "./machines/synthMachine";
 import { sequencerMachine } from "./machines/sequencerMachine";
 import * as Tone from "tone";
 
@@ -13,9 +12,17 @@ type SequencerStateValue = "playing" | "stopped";
 
 function App() {
   const [sequencerState, sequencerSend] = useMachine(sequencerMachine);
-  const [synthState] = useMachine(synthMachine);
 
-  const { grid, tempo, pitch, currentStep } = sequencerState.context;
+  const {
+    grid,
+    tempo,
+    pitch,
+    currentStep,
+    filterFrequency,
+    filterDepth,
+    filterWet,
+    synth,
+  } = sequencerState.context;
 
   async function togglePlayback() {
     if (sequencerState.matches("playing" as SequencerStateValue)) {
@@ -67,6 +74,18 @@ function App() {
     }
   }
 
+  function updateFilterFrequency(frequency: number) {
+    sequencerSend({ type: "UPDATE_FILTER_FREQUENCY", frequency });
+  }
+
+  function updateFilterDepth(depth: number) {
+    sequencerSend({ type: "UPDATE_FILTER_DEPTH", depth });
+  }
+
+  function updateFilterWet(wet: number) {
+    sequencerSend({ type: "UPDATE_FILTER_WET", wet });
+  }
+
   return (
     <div className="container">
       <div className="sequencer">
@@ -79,7 +98,7 @@ function App() {
         />
 
         <Keyboard
-          synth={synthState.context.synth}
+          synth={synth || undefined}
           startOctave={3}
           onNotePress={setRootNote}
           isPlaying={sequencerState.matches("playing" as SequencerStateValue)}
@@ -90,9 +109,15 @@ function App() {
         <div className="controls-container">
           <TempoControl tempo={tempo} onTempoChange={updateTempo} />
           <PitchControl pitch={pitch} onPitchChange={updatePitch} />
+          <FilterControl
+            frequency={filterFrequency}
+            depth={filterDepth}
+            wet={filterWet}
+            onFrequencyChange={updateFilterFrequency}
+            onDepthChange={updateFilterDepth}
+            onWetChange={updateFilterWet}
+          />
         </div>
-
-        <EffectsPanel synth={synthState.context.synth} />
       </div>
     </div>
   );

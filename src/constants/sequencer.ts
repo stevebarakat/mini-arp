@@ -51,20 +51,20 @@ export const MAX_TEMPO = 200;
 export const DEFAULT_TEMPO = 120;
 
 export const SYNTH_CONFIG = {
-  harmonicity: 3, // Ratio between carrier and modulator frequencies
+  harmonicity: 1.5, // Reduced from 3 to create less harmonic complexity
   oscillator: {
-    type: "fatsquare" as const,
-    spread: 60,
-    count: 5,
+    type: "sine8" as const, // Changed from fatsquare to sine8 (smoother with some harmonics)
+    spread: 30, // Reduced from 60
+    count: 3, // Reduced from 5
   },
   envelope: {
-    attack: 0.005,
+    attack: 0.01,
     decay: 0.3,
     sustain: 0.4,
     release: 0.6,
   },
   modulation: {
-    type: "square" as const, // Modulator waveform
+    type: "triangle" as const, // Changed from square to triangle (smoother)
     phase: 0,
   },
   modulationEnvelope: {
@@ -73,6 +73,24 @@ export const SYNTH_CONFIG = {
     sustain: 0.3,
     release: 0.4,
   },
-  volume: -8,
-  detune: 10,
+  volume: -10, // Reduced slightly to prevent clipping
+  detune: 5, // Reduced from 10
 };
+
+// Configuration for the auto-filter effect
+export const FILTER_CONFIG = {
+  frequency: 1, // LFO frequency in Hz
+  type: "sine" as const,
+  depth: 0.6, // How much the filter changes
+  baseFrequency: 200, // Starting filter frequency
+  octaves: 2.5, // Range of the filter modulation
+  filter: {
+    type: "lowpass" as const,
+    rolloff: -12 as -12 | -24 | -48 | -96, // Must be one of the valid rolloff values
+    Q: 1,
+  },
+  wet: 0.5, // Mix between dry and wet signal (0-1)
+};
+
+// Bus name for effects routing
+export const EFFECTS_BUS = "effects";
