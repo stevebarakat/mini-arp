@@ -5,25 +5,61 @@ import { FilterControl } from "./components/FilterControl";
 import { Keyboard } from "./components/Keyboard";
 import { useMachine } from "@xstate/react";
 import { sequencerMachine } from "./machines/sequencerMachine";
+import { effectsMachine } from "./machines/effectsMachine";
 import * as Tone from "tone";
+import { useEffect, useRef } from "react";
 
 // Define the state values type for type safety
 type SequencerStateValue = "playing" | "stopped";
 
 function App() {
   const [sequencerState, sequencerSend] = useMachine(sequencerMachine);
+  const [effectsState, effectsSend] = useMachine(effectsMachine);
+  const isConnectedRef = useRef(false);
 
-  const {
-    grid,
-    tempo,
-    pitch,
-    currentStep,
-    filterFrequency,
-    filterDepth,
-    filterWet,
-    filterResonance,
+  const { grid, tempo, pitch, currentStep, synth } = sequencerState.context;
+
+  const { filterFrequency, filterDepth, filterWet, filterResonance } =
+    effectsState.context;
+
+  // Initialize effects when the app starts
+  useEffect(() => {
+    console.log("Initializing effects");
+    effectsSend({ type: "INIT_EFFECTS" });
+  }, [effectsSend]);
+
+  // Connect the sequencer to the effects when both are initialized
+  useEffect(() => {
+    if (
+      synth &&
+      effectsState.context.effectsBus &&
+      !isConnectedRef.current &&
+      effectsState.matches("active")
+    ) {
+      console.log("Connecting sequencer to effects");
+
+      // Set the ref to prevent multiple connections
+      isConnectedRef.current = true;
+
+      // Use a small delay to ensure all components are fully initialized
+      setTimeout(() => {
+        sequencerSend({
+          type: "CONNECT_TO_EFFECTS",
+          effectsContext: effectsState.context,
+        });
+      }, 200);
+    }
+
+    // Reset the connection flag if either the synth or effects bus is removed
+    if (!synth || !effectsState.context.effectsBus) {
+      isConnectedRef.current = false;
+    }
+  }, [
     synth,
-  } = sequencerState.context;
+    effectsState.context.effectsBus,
+    sequencerSend,
+    effectsState.matches,
+  ]);
 
   async function togglePlayback() {
     if (sequencerState.matches("playing" as SequencerStateValue)) {
@@ -76,19 +112,19 @@ function App() {
   }
 
   function updateFilterFrequency(frequency: number) {
-    sequencerSend({ type: "UPDATE_FILTER_FREQUENCY", frequency });
+    effectsSend({ type: "UPDATE_FILTER_FREQUENCY", frequency });
   }
 
   function updateFilterDepth(depth: number) {
-    sequencerSend({ type: "UPDATE_FILTER_DEPTH", depth });
+    effectsSend({ type: "UPDATE_FILTER_DEPTH", depth });
   }
 
   function updateFilterWet(wet: number) {
-    sequencerSend({ type: "UPDATE_FILTER_WET", wet });
+    effectsSend({ type: "UPDATE_FILTER_WET", wet });
   }
 
   function updateFilterResonance(resonance: number) {
-    sequencerSend({ type: "UPDATE_FILTER_RESONANCE", resonance });
+    effectsSend({ type: "UPDATE_FILTER_RESONANCE", resonance });
   }
 
   return (
