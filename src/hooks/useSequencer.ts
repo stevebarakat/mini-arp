@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import * as Tone from "tone";
 import {
   NOTES,
@@ -22,6 +22,7 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
   );
   const [synth, setSynth] = useState<Tone.Synth | null>(null);
   const [tempo, setTempo] = useState(DEFAULT_TEMPO);
+  const sequenceRef = useRef<Tone.Sequence | null>(null);
 
   useEffect(() => {
     const newSynth = new Tone.Synth(SYNTH_CONFIG).toDestination();
@@ -32,8 +33,23 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
     };
   }, []);
 
-  const startPattern = useCallback(() => {
+  // Clean up sequence on unmount
+  useEffect(() => {
+    return () => {
+      if (sequenceRef.current) {
+        sequenceRef.current.dispose();
+      }
+    };
+  }, []);
+
+  // Create or update sequence when grid or synth changes
+  useEffect(() => {
     if (!synth) return;
+
+    // Dispose of previous sequence if it exists
+    if (sequenceRef.current) {
+      sequenceRef.current.dispose();
+    }
 
     const sequence = new Tone.Sequence(
       (time, step) => {
@@ -48,15 +64,25 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
       "8n"
     );
 
-    Tone.Transport.bpm.value = tempo;
-    sequence.start(0);
-    Tone.Transport.start();
+    sequenceRef.current = sequence;
+
+    // If we're playing, start the new sequence immediately
+    if (isPlaying) {
+      sequence.start(0);
+    }
 
     return () => {
-      sequence.stop();
-      Tone.Transport.stop();
+      sequence.dispose();
     };
-  }, [grid, synth, tempo, onStepChange]);
+  }, [grid, synth, isPlaying, onStepChange]);
+
+  const startPattern = useCallback(() => {
+    if (!synth || !sequenceRef.current) return;
+
+    Tone.Transport.bpm.value = tempo;
+    sequenceRef.current.start(0);
+    Tone.Transport.start();
+  }, [synth, tempo]);
 
   const togglePlayback = async () => {
     if (isPlaying) {
@@ -65,8 +91,24 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
       onStepChange(-1);
     } else {
       await Tone.start();
-      startPattern();
+      // Make sure sequence exists before starting
+      if (!sequenceRef.current && synth) {
+        const sequence = new Tone.Sequence(
+          (time, step) => {
+            grid.forEach((row, rowIndex) => {
+              if (row[step]) {
+                synth.triggerAttackRelease(NOTES[rowIndex], "8n", time);
+              }
+            });
+            onStepChange(step);
+          },
+          Array.from({ length: STEPS }, (_, i) => i),
+          "8n"
+        );
+        sequenceRef.current = sequence;
+      }
       setIsPlaying(true);
+      startPattern();
     }
   };
 
