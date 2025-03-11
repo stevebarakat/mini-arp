@@ -87,9 +87,17 @@ export const FILTER_CONFIG = {
   filter: {
     type: "lowpass" as const,
     rolloff: -12 as -12 | -24 | -48 | -96, // Must be one of the valid rolloff values
-    Q: 1,
+    Q: 1, // Resonance of the filter (default: 1)
   },
   wet: 0.5, // Mix between dry and wet signal (0-1)
+};
+
+// Min and max values for filter parameters
+export const FILTER_PARAM_RANGES = {
+  Q: { min: 0.1, max: 20 }, // Resonance range
+  frequency: { min: 0.1, max: 10 }, // LFO frequency range in Hz
+  depth: { min: 0, max: 1 }, // Depth range
+  wet: { min: 0, max: 1 }, // Wet mix range
 };
 
 // Bus name for effects routing

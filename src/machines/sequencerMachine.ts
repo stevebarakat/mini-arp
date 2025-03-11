@@ -7,6 +7,7 @@ import {
   SYNTH_CONFIG,
   FILTER_CONFIG,
   EFFECTS_BUS,
+  FILTER_PARAM_RANGES,
 } from "../constants/sequencer";
 import { setup, assign, fromCallback } from "xstate";
 import * as Tone from "tone";
@@ -60,7 +61,8 @@ type SequencerEvent =
   | { type: "STORE_STEP_TRACKER_ID"; id: number }
   | { type: "UPDATE_FILTER_FREQUENCY"; frequency: number }
   | { type: "UPDATE_FILTER_DEPTH"; depth: number }
-  | { type: "UPDATE_FILTER_WET"; wet: number };
+  | { type: "UPDATE_FILTER_WET"; wet: number }
+  | { type: "UPDATE_FILTER_RESONANCE"; resonance: number };
 
 type SequencerContext = {
   note: string;
@@ -77,6 +79,7 @@ type SequencerContext = {
   filterFrequency: number;
   filterDepth: number;
   filterWet: number;
+  filterResonance: number;
   channelSender: Tone.Channel | null;
 };
 
@@ -152,6 +155,7 @@ export const sequencerMachine = setup({
     filterFrequency: FILTER_CONFIG.frequency,
     filterDepth: FILTER_CONFIG.depth,
     filterWet: FILTER_CONFIG.wet,
+    filterResonance: FILTER_CONFIG.filter.Q,
     channelSender: null,
   },
   entry: assign({
@@ -541,6 +545,34 @@ export const sequencerMachine = setup({
             console.warn("Auto-filter not available for wet mix update");
           }
           return event.wet;
+        },
+      }),
+    },
+    UPDATE_FILTER_RESONANCE: {
+      actions: assign({
+        filterResonance: ({ event, context }) => {
+          if (context.autoFilter) {
+            try {
+              // Set the resonance (Q) value and log it
+              context.autoFilter.filter.Q.value = event.resonance;
+              console.log(`Updated filter resonance to ${event.resonance}`);
+
+              // Ensure audio routing is properly connected
+              ensureAudioRouting(context);
+
+              // Log the current audio routing to verify connections
+              console.log("Current audio routing:", {
+                autoFilter: !!context.autoFilter,
+                effectsBus: !!context.effectsBus,
+                channelSender: !!context.channelSender,
+              });
+            } catch (error) {
+              console.error("Error updating filter resonance:", error);
+            }
+          } else {
+            console.warn("Auto-filter not available for resonance update");
+          }
+          return event.resonance;
         },
       }),
     },

@@ -21,6 +21,7 @@ function App() {
     filterFrequency,
     filterDepth,
     filterWet,
+    filterResonance,
     synth,
   } = sequencerState.context;
 
@@ -86,6 +87,10 @@ function App() {
     sequencerSend({ type: "UPDATE_FILTER_WET", wet });
   }
 
+  function updateFilterResonance(resonance: number) {
+    sequencerSend({ type: "UPDATE_FILTER_RESONANCE", resonance });
+  }
+
   return (
     <div className="container">
       <div className="sequencer">
@@ -113,9 +118,11 @@ function App() {
             frequency={filterFrequency}
             depth={filterDepth}
             wet={filterWet}
+            resonance={filterResonance}
             onFrequencyChange={updateFilterFrequency}
             onDepthChange={updateFilterDepth}
             onWetChange={updateFilterWet}
+            onResonanceChange={updateFilterResonance}
           />
         </div>
       </div>
