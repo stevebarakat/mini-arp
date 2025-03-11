@@ -1,8 +1,13 @@
 import React from "react";
-import * as Tone from "tone";
+
+// Define a type that includes the methods we need
+interface SynthInterface {
+  triggerAttack: (note: string, time?: number) => void;
+  triggerRelease: (time?: number) => void;
+}
 
 interface KeyboardProps {
-  synth: Tone.Synth | undefined;
+  synth: SynthInterface | undefined;
   startOctave?: number;
   onNotePress?: (note: string) => void;
   isPlaying: boolean;
@@ -36,19 +41,27 @@ export function Keyboard({
   const handleNotePress = async (note: string) => {
     if (!synth) return;
 
+    // Play the note on the synth
+    synth.triggerAttack(note);
+
     // Set the root note for the arpeggiator
     if (onNotePress) {
       onNotePress(note);
     }
 
-    // Start the sequence
+    // Start the sequence if not already playing
     if (!isPlaying) {
       await onStartSequence();
     }
   };
 
   const handleNoteRelease = () => {
-    // Stop the sequence
+    if (!synth) return;
+
+    // Release the note on the synth
+    synth.triggerRelease();
+
+    // Stop the sequence if playing
     if (isPlaying) {
       onStopSequence();
     }
