@@ -1,11 +1,11 @@
 import { NOTES } from "../constants/sequencer";
 import { Grid } from "../machines/sequencerMachine";
 
-interface SequencerGridProps {
+type SequencerGridProps = {
   grid: Grid;
   currentStep: number;
   onToggleCell: (rowIndex: number, colIndex: number) => void;
-}
+};
 
 export function SequencerGrid({
   grid,

@@ -1,9 +1,9 @@
 import { MIN_TEMPO, MAX_TEMPO } from "../constants/sequencer";
 
-interface TempoControlProps {
+type TempoControlProps = {
   tempo: number;
   onTempoChange: (tempo: number) => void;
-}
+};
 
 export function TempoControl({ tempo, onTempoChange }: TempoControlProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

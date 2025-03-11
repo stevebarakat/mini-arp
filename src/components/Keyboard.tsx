@@ -1,19 +1,16 @@
-import React from "react";
-
-// Define a type that includes the methods we need
-interface SynthInterface {
+type SynthInterface = {
   triggerAttack: (note: string, time?: number) => void;
   triggerRelease: (time?: number) => void;
-}
+};
 
-interface KeyboardProps {
+type KeyboardProps = {
   synth: SynthInterface | undefined;
   startOctave?: number;
   onNotePress?: (note: string) => void;
   isPlaying: boolean;
   onStartSequence: () => Promise<void>;
   onStopSequence: () => void;
-}
+};
 
 const KEYS = [
   { note: "C", isBlack: false },

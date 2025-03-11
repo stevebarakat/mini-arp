@@ -1,9 +1,9 @@
 import { MIN_PITCH_SHIFT, MAX_PITCH_SHIFT } from "../constants/sequencer";
 
-interface PitchControlProps {
+type PitchControlProps = {
   pitch: number;
   onPitchChange: (shift: number) => void;
-}
+};
 
 export function PitchControl({ pitch, onPitchChange }: PitchControlProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,9 +1,9 @@
 import { Play, Square, Settings } from "lucide-react";
 
-interface ControlsProps {
+type ControlsProps = {
   isPlaying: boolean;
   onPlayClick: () => void;
-}
+};
 
 export function Controls({ isPlaying, onPlayClick }: ControlsProps) {
   return (
