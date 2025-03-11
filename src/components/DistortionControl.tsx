@@ -48,7 +48,7 @@ export function DistortionControl({
   return (
     <div className="effect-control distortion-control">
       <div className="effect-header">
-        <h3>Distortion</h3>
+        <h3>Distortion + Compression</h3>
         <label className="toggle-switch">
           <input
             type="checkbox"
@@ -57,6 +57,10 @@ export function DistortionControl({
           />
           <span className="toggle-slider"></span>
         </label>
+      </div>
+
+      <div className="effect-description">
+        <p>Aggressive sound with built-in compression</p>
       </div>
 
       <div className="effect-param">

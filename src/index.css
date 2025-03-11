@@ -494,3 +494,14 @@ input:checked + .toggle-slider:before {
 .distortion-control {
   border-top: 3px solid #ff6b6b;
 }
+
+.compressor-control {
+  border-top: 3px solid #ffa500;
+}
+
+.effect-description {
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
