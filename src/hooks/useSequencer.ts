@@ -8,6 +8,7 @@ import {
   transposeNote,
 } from "../constants/sequencer";
 import { transportMachine } from "../machines/transportMachine";
+import { sequencerMachine } from "../machines/sequencerMachine";
 import { useMachine } from "@xstate/react";
 
 export type Grid = boolean[][];
@@ -17,13 +18,11 @@ interface UseSequencerProps {
 }
 
 export function useSequencer({ onStepChange }: UseSequencerProps) {
-  const [state, send] = useMachine(transportMachine);
-  const { tempo } = state.context;
-  const [grid, setGrid] = useState<Grid>(() =>
-    Array(NOTES.length)
-      .fill(null)
-      .map(() => Array(STEPS).fill(false))
-  );
+  const [transportState, transportSend] = useMachine(transportMachine);
+  const [sequencerState, sequencerSend] = useMachine(sequencerMachine);
+  const { tempo } = transportState.context;
+  const { grid } = sequencerState.context;
+
   const [synth, setSynth] = useState<Tone.Synth | null>(null);
   const [pitchShift, setPitchShift] = useState(DEFAULT_PITCH_SHIFT);
   const sequenceRef = useRef<Tone.Sequence | null>(null);
@@ -72,14 +71,14 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
 
     sequenceRef.current = sequence;
 
-    if (state.matches("playing")) {
+    if (transportState.matches("playing")) {
       sequence.start(0);
     }
 
     return () => {
       sequence.dispose();
     };
-  }, [grid, synth, state, onStepChange, pitchShift]);
+  }, [grid, synth, transportState, onStepChange, pitchShift]);
 
   const startPattern = useCallback(() => {
     if (!synth || !sequenceRef.current) return;
@@ -90,38 +89,37 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
   }, [synth, tempo]);
 
   const togglePlayback = async () => {
-    if (state.matches("playing")) {
+    if (transportState.matches("playing")) {
       Tone.getTransport().stop();
-      send({ type: "STOP" });
+      transportSend({ type: "STOP" });
       onStepChange(-1);
     } else {
       await Tone.start();
-      send({ type: "PLAY" });
+      transportSend({ type: "PLAY" });
       startPattern();
     }
   };
 
   const toggleCell = (rowIndex: number, colIndex: number) => {
-    setGrid((grid) =>
-      grid.map((row, r) =>
-        row.map((cell, c) => {
-          if (c === colIndex) {
-            // If this is the clicked cell, toggle it
-            if (r === rowIndex) {
-              return !cell;
-            }
-            // If this is any other cell in the same column, deselect it
-            return false;
+    const newGrid = grid.map((row, r) =>
+      row.map((cell, c) => {
+        if (c === colIndex) {
+          // If this is the clicked cell, toggle it
+          if (r === rowIndex) {
+            return !cell;
           }
-          // Keep other cells unchanged
-          return cell;
-        })
-      )
+          // If this is any other cell in the same column, deselect it
+          return false;
+        }
+        // Keep other cells unchanged
+        return cell;
+      })
     );
+    sequencerSend({ type: "SET_GRID", grid: newGrid });
   };
 
   const updateTempo = (newTempo: number) => {
-    send({ type: "UPDATE_TEMPO", tempo: newTempo });
+    transportSend({ type: "UPDATE_TEMPO", tempo: newTempo });
   };
 
   const updatePitchShift = (newPitchShift: number) => {
@@ -129,7 +127,7 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
   };
 
   return {
-    state,
+    state: transportState,
     grid,
     tempo,
     pitchShift,
