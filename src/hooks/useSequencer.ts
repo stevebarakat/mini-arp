@@ -12,6 +12,38 @@ interface UseSequencerProps {
   onStepChange: (step: number) => void;
 }
 
+const INTERVALS = {
+  C: 0,
+  "C#": 1,
+  D: 2,
+  "D#": 3,
+  E: 4,
+  F: 5,
+  "F#": 6,
+  G: 7,
+  "G#": 8,
+  A: 9,
+  "A#": 10,
+  B: 11,
+};
+
+// Calculate semitones between two notes
+const calculateSemitones = (fromNote: string, toNote: string): number => {
+  const fromNoteName = fromNote.slice(0, -1);
+  const fromOctave = parseInt(fromNote.slice(-1));
+  const toNoteName = toNote.slice(0, -1);
+  const toOctave = parseInt(toNote.slice(-1));
+
+  const fromInterval = INTERVALS[fromNoteName as keyof typeof INTERVALS];
+  const toInterval = INTERVALS[toNoteName as keyof typeof INTERVALS];
+
+  // Calculate the total interval difference
+  const octaveDiff = toOctave - fromOctave;
+  const noteDiff = toInterval - fromInterval;
+
+  return octaveDiff * 12 + noteDiff;
+};
+
 export function useSequencer({ onStepChange }: UseSequencerProps) {
   const [transportState, transportSend] = useMachine(transportMachine);
   const [sequencerState, sequencerSend] = useMachine(sequencerMachine);
@@ -56,38 +88,14 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
       (time, step) => {
         grid.forEach((row, rowIndex) => {
           if (row[step]) {
-            const baseNote = NOTES[rowIndex];
-            // Get the root note without octave
-            const rootNoteName = rootNote.slice(0, -1);
-            const rootNoteOctave = parseInt(rootNote.slice(-1));
-            const baseNoteName = baseNote.slice(0, -1);
+            // Get the pattern note from the grid
+            const patternNote = NOTES[rowIndex];
 
-            // Calculate semitones between root and base note
-            const noteMap = [
-              "C",
-              "C#",
-              "D",
-              "D#",
-              "E",
-              "F",
-              "F#",
-              "G",
-              "G#",
-              "A",
-              "A#",
-              "B",
-            ];
-            const rootIndex = noteMap.indexOf(rootNoteName);
-            const baseIndex = noteMap.indexOf(baseNoteName);
-            let semitones = baseIndex - rootIndex;
+            // Calculate the interval from the root note to the pattern note
+            const interval = calculateSemitones("C4", patternNote);
 
-            // Adjust for octave difference
-            const baseNoteOctave = parseInt(baseNote.slice(-1));
-            semitones += (baseNoteOctave - rootNoteOctave) * 12;
-
-            // Create the final note by transposing from root
-            const noteWithInterval = transposeNote(rootNote, semitones);
-            const finalNote = transposeNote(noteWithInterval, pitch);
+            // Apply the interval to the pressed key (root note)
+            const finalNote = transposeNote(rootNote, interval + pitch);
 
             synth.triggerAttackRelease(finalNote, "8n", time);
           }
