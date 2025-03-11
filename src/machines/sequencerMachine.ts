@@ -149,9 +149,14 @@ export const sequencerMachine = setup({
           }),
         },
         SET_ROOT_NOTE: {
-          actions: assign({
-            rootNote: ({ event }) => event.note,
-          }),
+          actions: [
+            assign({
+              rootNote: ({ event }) => event.note,
+            }),
+            ({ event }) => {
+              console.log(`Root note changed to ${event.note}`);
+            },
+          ],
         },
         UPDATE_TEMPO: {
           actions: [
@@ -201,6 +206,10 @@ export const sequencerMachine = setup({
         },
         assign({
           sequence: ({ context }) => {
+            console.log(
+              `Creating sequence with root note: ${context.rootNote}`
+            );
+
             // Create a new sequence
             const seq = new Tone.Sequence(
               (time, step) => {
@@ -209,13 +218,18 @@ export const sequencerMachine = setup({
                   if (row[step]) {
                     // Calculate the note to play based on the root note and row
                     const baseNote = NOTES[rowIndex];
-                    const semitones = calculateSemitones(
-                      context.rootNote,
-                      baseNote
-                    );
+
+                    // Calculate the interval from C4 to the pattern note
+                    const patternInterval = calculateSemitones("C4", baseNote);
+
+                    // Apply the interval to the current root note
                     const noteToPlay = transposeNote(
                       context.rootNote,
-                      semitones + context.pitch
+                      patternInterval + context.pitch
+                    );
+
+                    console.log(
+                      `Playing note: ${noteToPlay} (root: ${context.rootNote}, pattern: ${baseNote}, interval: ${patternInterval}, pitch: ${context.pitch})`
                     );
 
                     // Play the note
@@ -265,9 +279,14 @@ export const sequencerMachine = setup({
           }),
         },
         SET_ROOT_NOTE: {
-          actions: assign({
-            rootNote: ({ event }) => event.note,
-          }),
+          actions: [
+            assign({
+              rootNote: ({ event }) => event.note,
+            }),
+            ({ event }) => {
+              console.log(`Root note changed to ${event.note} while playing`);
+            },
+          ],
         },
         UPDATE_TEMPO: {
           actions: [
