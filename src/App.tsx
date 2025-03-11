@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useSequencer } from "./hooks/useSequencer";
-import { Controls } from "./components/Controls";
 import { SequencerGrid } from "./components/SequencerGrid";
 import { TempoControl } from "./components/TempoControl";
 import { PitchControl } from "./components/PitchControl";
@@ -20,6 +19,7 @@ function App() {
     toggleCell,
     updateTempo,
     updatePitch,
+    setRootNote,
   } = useSequencer({
     onStepChange: setCurrentStep,
   });
@@ -29,18 +29,20 @@ function App() {
       <div className="sequencer">
         <h1>Tone.js Arpeggiator</h1>
 
-        <Controls
-          isPlaying={state.matches("playing")}
-          onPlayClick={togglePlayback}
-        />
-
         <SequencerGrid
           grid={grid}
           currentStep={currentStep}
           onToggleCell={toggleCell}
         />
 
-        <Keyboard synth={synthState.context.synth} startOctave={3} />
+        <Keyboard
+          synth={synthState.context.synth}
+          startOctave={3}
+          onNotePress={setRootNote}
+          isPlaying={state.matches("playing")}
+          onStartSequence={togglePlayback}
+          onStopSequence={togglePlayback}
+        />
 
         <div className="controls-container">
           <TempoControl tempo={tempo} onTempoChange={updateTempo} />

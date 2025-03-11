@@ -4,6 +4,10 @@ import * as Tone from "tone";
 interface KeyboardProps {
   synth: Tone.Synth | undefined;
   startOctave?: number;
+  onNotePress?: (note: string) => void;
+  isPlaying: boolean;
+  onStartSequence: () => Promise<void>;
+  onStopSequence: () => void;
 }
 
 const KEYS = [
@@ -21,10 +25,33 @@ const KEYS = [
   { note: "B", isBlack: false },
 ];
 
-export function Keyboard({ synth, startOctave = 3 }: KeyboardProps) {
-  const handleNotePress = (note: string) => {
+export function Keyboard({
+  synth,
+  startOctave = 3,
+  onNotePress,
+  isPlaying,
+  onStartSequence,
+  onStopSequence,
+}: KeyboardProps) {
+  const handleNotePress = async (note: string) => {
     if (!synth) return;
-    synth.triggerAttackRelease(note, "8n");
+
+    // Set the root note for the arpeggiator
+    if (onNotePress) {
+      onNotePress(note);
+    }
+
+    // Start the sequence
+    if (!isPlaying) {
+      await onStartSequence();
+    }
+  };
+
+  const handleNoteRelease = () => {
+    // Stop the sequence
+    if (isPlaying) {
+      onStopSequence();
+    }
   };
 
   const renderKey = (note: string, octave: number, isBlack: boolean) => {
@@ -34,6 +61,8 @@ export function Keyboard({ synth, startOctave = 3 }: KeyboardProps) {
         key={fullNote}
         className={`piano-key ${isBlack ? "black" : "white"}`}
         onMouseDown={() => handleNotePress(fullNote)}
+        onMouseUp={handleNoteRelease}
+        onMouseLeave={handleNoteRelease}
         role="button"
         tabIndex={0}
         aria-label={fullNote}

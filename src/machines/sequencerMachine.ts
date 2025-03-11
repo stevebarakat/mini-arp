@@ -7,12 +7,14 @@ type SequencerEvent =
   | { type: "STOP" }
   | { type: "UPDATE_NOTE"; note: string }
   | { type: "UPDATE_PITCH"; pitch: number }
-  | { type: "SET_GRID"; grid: Grid };
+  | { type: "SET_GRID"; grid: Grid }
+  | { type: "SET_ROOT_NOTE"; note: string };
 
 type SequencerContext = {
   note: string;
   grid: Grid;
   pitch: number;
+  rootNote: string;
 };
 
 export const sequencerMachine = createMachine({
@@ -24,6 +26,7 @@ export const sequencerMachine = createMachine({
   },
   context: {
     note: "C4",
+    rootNote: "C4",
     pitch: DEFAULT_PITCH,
     grid: Array(NOTES.length)
       .fill(null)
@@ -58,6 +61,12 @@ export const sequencerMachine = createMachine({
       actions: assign(({ context, event }) => ({
         ...context,
         grid: event.grid,
+      })),
+    },
+    SET_ROOT_NOTE: {
+      actions: assign(({ context, event }) => ({
+        ...context,
+        rootNote: event.note,
       })),
     },
   },
