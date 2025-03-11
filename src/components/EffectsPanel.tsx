@@ -10,6 +10,8 @@ export const EffectsPanel: React.FC<EffectsPanelProps> = ({ synth }) => {
   const [reverb, setReverb] = useState<Tone.Reverb | null>(null);
   const [delay, setDelay] = useState<Tone.FeedbackDelay | null>(null);
   const [distortion, setDistortion] = useState<Tone.Distortion | null>(null);
+  // Add channel merger for parallel processing
+  const [, setMerger] = useState<Tone.Merge | null>(null);
 
   // State for effect parameters
   const [reverbEnabled, setReverbEnabled] = useState(false);
@@ -26,37 +28,56 @@ export const EffectsPanel: React.FC<EffectsPanelProps> = ({ synth }) => {
   useEffect(() => {
     if (!synth) return;
 
+    // Create a channel merger to combine parallel paths
+    const newMerger = new Tone.Merge().toDestination();
+
     // Create effects
     const newReverb = new Tone.Reverb({
       decay: reverbDecay,
       wet: 0, // Start disabled
-    }).toDestination();
+    });
 
     const newDelay = new Tone.FeedbackDelay({
       delayTime: delayTime,
       feedback: delayFeedback,
       wet: 0, // Start disabled
-    }).toDestination();
+    });
 
     const newDistortion = new Tone.Distortion({
       distortion: distortionAmount,
       wet: 0, // Start disabled
-    }).toDestination();
+    });
 
-    // Connect synth to effects
+    // Set up parallel signal flow using a simpler approach:
+    // 1. Disconnect synth from any previous connections
     synth.disconnect();
-    synth.chain(newReverb, newDelay, newDistortion, Tone.Destination);
+
+    // 2. Create three parallel paths directly from the synth
+
+    // Path 1: Synth -> Distortion -> Merger input 0
+    synth.connect(newDistortion);
+    newDistortion.connect(newMerger, 0, 0);
+
+    // Path 2: Synth -> Reverb -> Merger input 1
+    synth.connect(newReverb);
+    newReverb.connect(newMerger, 0, 1);
+
+    // Path 3: Synth -> Delay -> Merger input 1 (mixed with reverb)
+    synth.connect(newDelay);
+    newDelay.connect(newMerger, 0, 1);
 
     // Store effects in state
     setReverb(newReverb);
     setDelay(newDelay);
     setDistortion(newDistortion);
+    setMerger(newMerger);
 
     // Cleanup function
     return () => {
       newReverb.dispose();
       newDelay.dispose();
       newDistortion.dispose();
+      newMerger.dispose();
 
       // Reconnect synth directly to destination
       if (synth) {
@@ -64,7 +85,7 @@ export const EffectsPanel: React.FC<EffectsPanelProps> = ({ synth }) => {
         synth.toDestination();
       }
     };
-  }, [synth]);
+  }, [delayFeedback, delayTime, distortionAmount, reverbDecay, synth]);
 
   // Handle effect parameter changes
   useEffect(() => {
@@ -92,6 +113,34 @@ export const EffectsPanel: React.FC<EffectsPanelProps> = ({ synth }) => {
   return (
     <div className="effects-panel">
       <h3>Effects</h3>
+
+      <div className="effect-control">
+        <div className="effect-header">
+          <label>
+            <input
+              type="checkbox"
+              checked={distortionEnabled}
+              onChange={(e) => setDistortionEnabled(e.target.checked)}
+            />
+            Distortion
+          </label>
+        </div>
+        <div className="effect-params">
+          <label>
+            Amount:
+            <input
+              type="range"
+              min="0.1"
+              max="1"
+              step="0.05"
+              value={distortionAmount}
+              onChange={(e) => setDistortionAmount(parseFloat(e.target.value))}
+              disabled={!distortionEnabled}
+            />
+            <span>{Math.round(distortionAmount * 100)}%</span>
+          </label>
+        </div>
+      </div>
 
       <div className="effect-control">
         <div className="effect-header">
@@ -158,34 +207,6 @@ export const EffectsPanel: React.FC<EffectsPanelProps> = ({ synth }) => {
               disabled={!delayEnabled}
             />
             <span>{Math.round(delayFeedback * 100)}%</span>
-          </label>
-        </div>
-      </div>
-
-      <div className="effect-control">
-        <div className="effect-header">
-          <label>
-            <input
-              type="checkbox"
-              checked={distortionEnabled}
-              onChange={(e) => setDistortionEnabled(e.target.checked)}
-            />
-            Distortion
-          </label>
-        </div>
-        <div className="effect-params">
-          <label>
-            Amount:
-            <input
-              type="range"
-              min="0.1"
-              max="1"
-              step="0.05"
-              value={distortionAmount}
-              onChange={(e) => setDistortionAmount(parseFloat(e.target.value))}
-              disabled={!distortionEnabled}
-            />
-            <span>{Math.round(distortionAmount * 100)}%</span>
           </label>
         </div>
       </div>
