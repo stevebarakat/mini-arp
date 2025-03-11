@@ -2,6 +2,7 @@ import { SequencerGrid } from "./components/SequencerGrid";
 import { TempoControl } from "./components/TempoControl";
 import { PitchControl } from "./components/PitchControl";
 import { Keyboard } from "./components/Keyboard";
+import { EffectsPanel } from "./components/EffectsPanel";
 import { useMachine } from "@xstate/react";
 import { synthMachine } from "./machines/synthMachine";
 import { sequencerMachine } from "./machines/sequencerMachine";
@@ -90,6 +91,8 @@ function App() {
           <TempoControl tempo={tempo} onTempoChange={updateTempo} />
           <PitchControl pitch={pitch} onPitchChange={updatePitch} />
         </div>
+
+        <EffectsPanel synth={synthState.context.synth} />
       </div>
     </div>
   );
