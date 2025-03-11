@@ -9,7 +9,7 @@ import {
 import { transportMachine } from "../machines/transportMachine";
 import { sequencerMachine } from "../machines/sequencerMachine";
 import { useMachine } from "@xstate/react";
-
+import { synthMachine } from "../machines/synthMachine";
 export type Grid = boolean[][];
 
 interface UseSequencerProps {
@@ -22,26 +22,9 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
   const { tempo } = transportState.context;
   const { grid, pitch } = sequencerState.context;
 
-  const [synth, setSynth] = useState<Tone.Synth | null>(null);
+  const [synthState, synthSend] = useMachine(synthMachine);
+  const { synth } = synthState.context;
   const sequenceRef = useRef<Tone.Sequence | null>(null);
-
-  useEffect(() => {
-    const newSynth = new Tone.Synth(SYNTH_CONFIG).toDestination();
-    setSynth(newSynth);
-
-    return () => {
-      newSynth.dispose();
-    };
-  }, []);
-
-  // Clean up sequence on unmount
-  useEffect(() => {
-    return () => {
-      if (sequenceRef.current) {
-        sequenceRef.current.dispose();
-      }
-    };
-  }, []);
 
   // Create or update sequence when grid changes
   useEffect(() => {
