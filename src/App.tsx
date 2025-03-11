@@ -20,14 +20,14 @@ function App() {
       sequencerSend({ type: "STEP_CHANGE", step });
     };
 
-    // Set up a callback for Tone.Transport
-    const id = Tone.Transport.scheduleRepeat(() => {
-      const step = Math.floor(Tone.Transport.ticks / 96) % 8;
+    // Set up a callback for Tone.getTransport()
+    const id = Tone.getTransport().scheduleRepeat(() => {
+      const step = Math.floor(Tone.getTransport().ticks / 96) % 8;
       handleStepChange(step);
     }, "8n");
 
     return () => {
-      Tone.Transport.clear(id);
+      Tone.getTransport().clear(id);
     };
   }, [sequencerSend]);
 
