@@ -21,10 +21,9 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
   const [transportState, transportSend] = useMachine(transportMachine);
   const [sequencerState, sequencerSend] = useMachine(sequencerMachine);
   const { tempo } = transportState.context;
-  const { grid } = sequencerState.context;
+  const { grid, pitch } = sequencerState.context;
 
   const [synth, setSynth] = useState<Tone.Synth | null>(null);
-  const [pitch, setPitch] = useState(DEFAULT_PITCH);
   const sequenceRef = useRef<Tone.Sequence | null>(null);
 
   useEffect(() => {
@@ -123,7 +122,7 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
   };
 
   const updatePitch = (newPitch: number) => {
-    setPitch(newPitch);
+    sequencerSend({ type: "UPDATE_PITCH", pitch: newPitch });
   };
 
   return {
