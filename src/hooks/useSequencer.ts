@@ -4,7 +4,6 @@ import {
   NOTES,
   STEPS,
   SYNTH_CONFIG,
-  DEFAULT_PITCH,
   transposeNote,
 } from "../constants/sequencer";
 import { transportMachine } from "../machines/transportMachine";

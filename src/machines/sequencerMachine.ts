@@ -1,4 +1,4 @@
-import { NOTES, STEPS } from "../constants/sequencer";
+import { NOTES, STEPS, DEFAULT_PITCH } from "../constants/sequencer";
 import { createMachine, assign } from "xstate";
 import { Grid } from "../hooks/useSequencer";
 
@@ -24,7 +24,7 @@ export const sequencerMachine = createMachine({
   },
   context: {
     note: "C4",
-    pitch: 0,
+    pitch: DEFAULT_PITCH,
     grid: Array(NOTES.length)
       .fill(null)
       .map(() => Array(STEPS).fill(false)) as Grid,
