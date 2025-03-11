@@ -62,6 +62,8 @@ type SequencerContext = {
   currentStep: number;
   synth: Tone.AMSynth | null;
   sequence: Tone.Sequence | null;
+  grid: Grid;
+  pitch: number;
 };
 
 export const sequencerMachine = setup({
@@ -75,12 +77,12 @@ export const sequencerMachine = setup({
   context: {
     note: "C4",
     rootNote: "C4",
-    pitch: DEFAULT_PITCH,
-    grid: DEFAULT_PATTERN,
     tempo: DEFAULT_TEMPO,
     currentStep: -1,
     synth: null,
     sequence: null,
+    grid: DEFAULT_PATTERN,
+    pitch: DEFAULT_PITCH,
   },
   entry: assign({
     synth: () => {

@@ -1,5 +1,5 @@
 import { NOTES } from "../constants/sequencer";
-import type { Grid } from "../hooks/useSequencer";
+import { Grid } from "../machines/sequencerMachine";
 
 interface SequencerGridProps {
   grid: Grid;
