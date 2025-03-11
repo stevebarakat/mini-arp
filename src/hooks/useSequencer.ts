@@ -42,9 +42,9 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
     };
   }, []);
 
-  // Create or update sequence when grid or synth changes
+  // Create or update sequence when grid changes
   useEffect(() => {
-    if (!synth) return;
+    if (!synth) return; // Only check for synth, remove isPlaying check
 
     // Dispose of previous sequence if it exists
     if (sequenceRef.current) {
@@ -66,7 +66,7 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
 
     sequenceRef.current = sequence;
 
-    // If we're playing, start the new sequence immediately
+    // Only start if we're playing
     if (isPlaying) {
       sequence.start(0);
     }
@@ -91,22 +91,6 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
       onStepChange(-1);
     } else {
       await Tone.start();
-      // Make sure sequence exists before starting
-      if (!sequenceRef.current && synth) {
-        const sequence = new Tone.Sequence(
-          (time, step) => {
-            grid.forEach((row, rowIndex) => {
-              if (row[step]) {
-                synth.triggerAttackRelease(NOTES[rowIndex], "8n", time);
-              }
-            });
-            onStepChange(step);
-          },
-          Array.from({ length: STEPS }, (_, i) => i),
-          "8n"
-        );
-        sequenceRef.current = sequence;
-      }
       setIsPlaying(true);
       startPattern();
     }
@@ -115,7 +99,18 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
   const toggleCell = (rowIndex: number, colIndex: number) => {
     setGrid((grid) =>
       grid.map((row, r) =>
-        row.map((cell, c) => (r === rowIndex && c === colIndex ? !cell : cell))
+        row.map((cell, c) => {
+          if (c === colIndex) {
+            // If this is the clicked cell, toggle it
+            if (r === rowIndex) {
+              return !cell;
+            }
+            // If this is any other cell in the same column, deselect it
+            return false;
+          }
+          // Keep other cells unchanged
+          return cell;
+        })
       )
     );
   };
