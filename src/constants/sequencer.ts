@@ -4,6 +4,15 @@ export const MIN_PITCH_SHIFT = -24; // 2 octaves down
 export const MAX_PITCH_SHIFT = 24; // 2 octaves up
 export const DEFAULT_PITCH = 0;
 
+// Default pattern for the sequencer grid
+// Creates an ascending arpeggio pattern
+export const DEFAULT_PATTERN = [
+  [true, false, false, false, false, false, false, false], // B
+  [false, true, false, false, false, false, false, true], // G
+  [false, false, true, false, true, false, true, false], // E
+  [false, false, false, true, false, true, false, false], // C
+];
+
 // Helper function to transpose a note by semitones
 export function transposeNote(note: string, semitones: number): string {
   const noteMap = [
@@ -43,12 +52,16 @@ export const DEFAULT_TEMPO = 120;
 
 export const SYNTH_CONFIG = {
   oscillator: {
-    type: "triangle" as const,
+    type: "fatsquare" as const, // More aggressive square wave
+    spread: 60, // Wider spread for more intensity
+    count: 5, // More oscillators
   },
   envelope: {
-    attack: 0.02,
-    decay: 0.1,
-    sustain: 0.3,
-    release: 1,
+    attack: 0.005, // Faster attack
+    decay: 0.3,
+    sustain: 0.4,
+    release: 0.6,
   },
+  volume: -8, // Reduce volume a bit more for headroom
+  detune: 10, // More detune for extra thickness
 };
