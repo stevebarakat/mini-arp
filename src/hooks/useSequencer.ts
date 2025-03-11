@@ -63,8 +63,8 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
       if (sequenceRef.current) {
         sequenceRef.current.stop();
       }
-      Tone.Transport.stop();
-      Tone.Transport.position = 0;
+      Tone.getTransport().stop();
+      Tone.getTransport().position = 0;
       if (synth) {
         synth.triggerRelease();
       }
@@ -124,10 +124,10 @@ export function useSequencer({ onStepChange }: UseSequencerProps) {
     if (!synth || !sequenceRef.current) return;
 
     try {
-      Tone.Transport.bpm.value = tempo;
-      Tone.Transport.position = 0;
+      Tone.getTransport().bpm.value = tempo;
+      Tone.getTransport().position = 0;
       sequenceRef.current.start();
-      Tone.Transport.start();
+      Tone.getTransport().start();
     } catch (error) {
       console.error("Error starting pattern:", error);
       cleanupSequence();
