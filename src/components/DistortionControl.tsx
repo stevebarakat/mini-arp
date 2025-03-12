@@ -48,7 +48,7 @@ export function DistortionControl({
   return (
     <div className="effect-control distortion-control">
       <div className="effect-header">
-        <h3>Distortion + Compression</h3>
+        <h3>Distortion</h3>
         <label className="toggle-switch">
           <input
             type="checkbox"
@@ -60,7 +60,7 @@ export function DistortionControl({
       </div>
 
       <div className="effect-description">
-        <p>Aggressive sound with built-in compression</p>
+        <p>Adds grit and harmonic saturation to the sound</p>
       </div>
 
       <div className="effect-param">

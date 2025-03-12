@@ -6,16 +6,10 @@ import {
   DELAY_CONFIG,
   REVERB_CONFIG,
   DISTORTION_CONFIG,
-  COMPRESSOR_CONFIG,
 } from "../constants/sequencer";
 
 // Define the types of effects we support
-export type EffectType =
-  | "autoFilter"
-  | "delay"
-  | "reverb"
-  | "distortion"
-  | "compressor";
+export type EffectType = "autoFilter" | "delay" | "reverb" | "distortion";
 
 // Define the events that can be sent to the effects machine
 type EffectsEvent =
@@ -33,12 +27,6 @@ type EffectsEvent =
   | { type: "UPDATE_REVERB_WET"; wet: number }
   | { type: "UPDATE_DISTORTION_AMOUNT"; distortion: number }
   | { type: "UPDATE_DISTORTION_WET"; wet: number }
-  | { type: "UPDATE_COMPRESSOR_THRESHOLD"; threshold: number }
-  | { type: "UPDATE_COMPRESSOR_RATIO"; ratio: number }
-  | { type: "UPDATE_COMPRESSOR_ATTACK"; attack: number }
-  | { type: "UPDATE_COMPRESSOR_RELEASE"; release: number }
-  | { type: "UPDATE_COMPRESSOR_KNEE"; knee: number }
-  | { type: "UPDATE_COMPRESSOR_WET"; wet: number }
   | { type: "TOGGLE_EFFECT"; effect: EffectType; enabled: boolean };
 
 // Define the context for the effects machine
@@ -51,7 +39,6 @@ export type EffectsContext = {
   delay: Tone.FeedbackDelay | null;
   reverb: Tone.Reverb | null;
   distortion: Tone.Distortion | null;
-  compressor: Tone.Compressor | null;
 
   // Channel senders for effects that don't have built-in send methods
   channelSenders: Record<string, Tone.Channel>;
@@ -76,14 +63,6 @@ export type EffectsContext = {
   // Distortion parameters
   distortionAmount: number;
   distortionWet: number;
-
-  // Compressor parameters
-  compressorThreshold: number;
-  compressorRatio: number;
-  compressorAttack: number;
-  compressorRelease: number;
-  compressorKnee: number;
-  compressorWet: number;
 
   // Active effects
   activeEffects: EffectType[];
@@ -138,177 +117,56 @@ const ensureAudioRouting = (context: EffectsContext) => {
 
   let routingSuccess = true;
 
-  // Handle autoFilter routing
-  if (context.autoFilter && context.channelSenders["autoFilter"]) {
-    try {
-      // Disconnect everything first
-      context.autoFilter.disconnect();
-      context.channelSenders["autoFilter"].disconnect();
+  try {
+    // Disconnect all effects first
+    if (context.autoFilter) context.autoFilter.disconnect();
+    if (context.delay) context.delay.disconnect();
+    if (context.reverb) context.reverb.disconnect();
+    if (context.distortion) context.distortion.disconnect();
+    if (context.effectsBus) context.effectsBus.disconnect();
 
-      // Connect autoFilter to its channel sender
-      context.autoFilter.connect(context.channelSenders["autoFilter"]);
+    // Create a final summing bus that goes to destination
+    const finalBus = new Tone.Gain().toDestination();
 
-      // Send from channel sender to effects bus
-      context.channelSenders["autoFilter"].send(EFFECTS_BUS, 0);
-
-      console.log(
-        `Audio routing established: autoFilter -> "${EFFECTS_BUS}" bus -> destination`
-      );
-
-      // Safely restart the autoFilter
-      safelyRestartAutoFilter(context.autoFilter);
-    } catch (error) {
-      console.error("Error connecting autoFilter:", error);
-      routingSuccess = false;
+    // Serial connection for autoFilter
+    if (context.autoFilter) {
+      // AutoFilter -> effectsBus -> finalBus
+      context.autoFilter.chain(context.effectsBus, finalBus);
+      console.log("Connected autoFilter serially");
     }
-  }
 
-  // Handle delay routing
-  if (context.delay && context.channelSenders["delay"]) {
-    try {
-      // Disconnect everything first
-      context.delay.disconnect();
-      context.channelSenders["delay"].disconnect();
-
-      // Connect delay to its channel sender
-      context.delay.connect(context.channelSenders["delay"]);
-
-      // Send from channel sender to effects bus
-      context.channelSenders["delay"].send(EFFECTS_BUS, 0);
-
-      console.log(
-        `Audio routing established: delay -> "${EFFECTS_BUS}" bus -> destination`
-      );
-    } catch (error) {
-      console.error("Error connecting delay:", error);
-      routingSuccess = false;
+    // Parallel connections that all go to the final bus
+    if (context.delay) {
+      context.effectsBus.connect(context.delay);
+      context.delay.connect(finalBus);
+      console.log("Connected delay in parallel");
     }
-  }
 
-  // Handle reverb routing
-  if (context.reverb && context.channelSenders["reverb"]) {
-    try {
-      // Disconnect everything first
-      context.reverb.disconnect();
-      context.channelSenders["reverb"].disconnect();
-
-      // Connect reverb to its channel sender
-      context.reverb.connect(context.channelSenders["reverb"]);
-
-      // Send from channel sender to effects bus
-      context.channelSenders["reverb"].send(EFFECTS_BUS, 0);
-
-      console.log(
-        `Audio routing established: reverb -> "${EFFECTS_BUS}" bus -> destination`
-      );
-    } catch (error) {
-      console.error("Error connecting reverb:", error);
-      routingSuccess = false;
+    if (context.reverb) {
+      context.effectsBus.connect(context.reverb);
+      context.reverb.connect(finalBus);
+      console.log("Connected reverb in parallel");
     }
-  }
 
-  // Check if both compressor and distortion are active
-  const bothCompressorAndDistortionActive =
-    context.activeEffects.includes("compressor") &&
-    context.activeEffects.includes("distortion");
-
-  // Handle compressor and distortion routing
-  if (
-    bothCompressorAndDistortionActive &&
-    context.compressor &&
-    context.distortion &&
-    context.channelSenders["distortion"]
-  ) {
-    try {
-      // Disconnect everything first
-      context.compressor.disconnect();
-      context.distortion.disconnect();
-      context.channelSenders["distortion"].disconnect();
-      context.channelSenders["compressor"].disconnect();
-
-      // Create a chain: compressor -> distortion -> channel sender
-      context.compressor.connect(context.distortion);
-      context.distortion.connect(context.channelSenders["distortion"]);
-
-      // Set the wet/dry mix by adjusting the channel sender's volume
-      context.channelSenders["distortion"].volume.value = Tone.gainToDb(
-        context.distortionWet
-      );
-
-      // Send from channel sender to effects bus
-      context.channelSenders["distortion"].send(EFFECTS_BUS, 0);
-
-      console.log(
-        `Audio routing established: compressor -> distortion -> "${EFFECTS_BUS}" bus -> destination`
-      );
-    } catch (error) {
-      console.error("Error connecting compressor-distortion chain:", error);
-      routingSuccess = false;
+    if (context.distortion) {
+      context.effectsBus.connect(context.distortion);
+      context.distortion.connect(finalBus);
+      console.log("Connected distortion in parallel");
     }
-  } else {
-    // Handle distortion routing if compressor is not active
+
+    // If no effects are active, connect effectsBus directly to finalBus
     if (
-      context.distortion &&
-      context.channelSenders["distortion"] &&
-      !bothCompressorAndDistortionActive
+      !context.autoFilter &&
+      !context.delay &&
+      !context.reverb &&
+      !context.distortion
     ) {
-      try {
-        // Disconnect everything first
-        context.distortion.disconnect();
-        context.channelSenders["distortion"].disconnect();
-
-        // Connect distortion to its channel sender
-        context.distortion.connect(context.channelSenders["distortion"]);
-
-        // Set the wet/dry mix by adjusting the channel sender's volume
-        context.channelSenders["distortion"].volume.value =
-          context.activeEffects.includes("distortion")
-            ? Tone.gainToDb(context.distortionWet)
-            : -Infinity;
-
-        // Send from channel sender to effects bus
-        context.channelSenders["distortion"].send(EFFECTS_BUS, 0);
-
-        console.log(
-          `Audio routing established: distortion -> "${EFFECTS_BUS}" bus -> destination`
-        );
-      } catch (error) {
-        console.error("Error connecting distortion:", error);
-        routingSuccess = false;
-      }
+      context.effectsBus.connect(finalBus);
+      console.log("Connected effectsBus directly to finalBus");
     }
-
-    // Handle compressor routing if distortion is not active
-    if (
-      context.compressor &&
-      context.channelSenders["compressor"] &&
-      !bothCompressorAndDistortionActive
-    ) {
-      try {
-        // Disconnect everything first
-        context.compressor.disconnect();
-        context.channelSenders["compressor"].disconnect();
-
-        // Connect compressor to its channel sender
-        context.compressor.connect(context.channelSenders["compressor"]);
-
-        // Set the wet/dry mix by adjusting the channel sender's volume
-        context.channelSenders["compressor"].volume.value =
-          context.activeEffects.includes("compressor")
-            ? Tone.gainToDb(context.compressorWet)
-            : -Infinity;
-
-        // Send from channel sender to effects bus
-        context.channelSenders["compressor"].send(EFFECTS_BUS, 0);
-
-        console.log(
-          `Audio routing established: compressor -> "${EFFECTS_BUS}" bus -> destination`
-        );
-      } catch (error) {
-        console.error("Error connecting compressor:", error);
-        routingSuccess = false;
-      }
-    }
+  } catch (error) {
+    console.error("Error connecting effects:", error);
+    routingSuccess = false;
   }
 
   return routingSuccess;
@@ -329,7 +187,6 @@ export const effectsMachine = setup({
     delay: null,
     reverb: null,
     distortion: null,
-    compressor: null,
     channelSenders: {},
     filterFrequency: FILTER_CONFIG.frequency,
     filterDepth: FILTER_CONFIG.depth,
@@ -343,12 +200,6 @@ export const effectsMachine = setup({
     reverbWet: REVERB_CONFIG.wet,
     distortionAmount: DISTORTION_CONFIG.distortion,
     distortionWet: DISTORTION_CONFIG.wet,
-    compressorThreshold: COMPRESSOR_CONFIG.threshold,
-    compressorRatio: COMPRESSOR_CONFIG.ratio,
-    compressorAttack: COMPRESSOR_CONFIG.attack,
-    compressorRelease: COMPRESSOR_CONFIG.release,
-    compressorKnee: COMPRESSOR_CONFIG.knee,
-    compressorWet: COMPRESSOR_CONFIG.wet,
     activeEffects: [],
     lastAutoFilterStartTime: 0,
   },
@@ -475,36 +326,6 @@ export const effectsMachine = setup({
               return distortion;
             },
 
-            // Create the compressor effect
-            compressor: () => {
-              console.log(
-                "Creating compressor effect with config:",
-                COMPRESSOR_CONFIG
-              );
-
-              // Create the compressor effect with proper configuration
-              const compressor = new Tone.Compressor({
-                threshold: COMPRESSOR_CONFIG.threshold,
-                ratio: COMPRESSOR_CONFIG.ratio,
-                attack: COMPRESSOR_CONFIG.attack,
-                release: COMPRESSOR_CONFIG.release,
-                knee: COMPRESSOR_CONFIG.knee,
-              });
-
-              // Since Compressor doesn't have a wet parameter, we'll use the wet value
-              // when connecting it in the audio routing
-
-              console.log("Compressor effect created with params:", {
-                threshold: compressor.threshold.value,
-                ratio: compressor.ratio.value,
-                attack: compressor.attack.value,
-                release: compressor.release.value,
-                knee: compressor.knee.value,
-              });
-
-              return compressor;
-            },
-
             // Create channel senders for each effect
             channelSenders: () => {
               console.log("Creating channel senders for effects routing");
@@ -514,7 +335,6 @@ export const effectsMachine = setup({
                 delay: new Tone.Channel(),
                 reverb: new Tone.Channel(),
                 distortion: new Tone.Channel(),
-                compressor: new Tone.Channel(),
               };
 
               return senders;
@@ -526,7 +346,6 @@ export const effectsMachine = setup({
               "delay",
               "reverb",
               "distortion",
-              "compressor",
             ],
 
             // Set the initial start time
@@ -580,13 +399,6 @@ export const effectsMachine = setup({
               if (context.distortion) {
                 context.distortion.dispose();
                 console.log("Distortion effect disposed");
-              }
-              return null;
-            },
-            compressor: ({ context }) => {
-              if (context.compressor) {
-                context.compressor.dispose();
-                console.log("Compressor effect disposed");
               }
               return null;
             },
@@ -869,128 +681,6 @@ export const effectsMachine = setup({
             },
           }),
         },
-        UPDATE_COMPRESSOR_THRESHOLD: {
-          actions: assign({
-            compressorThreshold: ({ event, context }) => {
-              if (context.compressor) {
-                try {
-                  // Set the threshold value and log it
-                  context.compressor.threshold.value = event.threshold;
-                  console.log(
-                    `Updated compressor threshold to ${event.threshold}`
-                  );
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating compressor threshold:", error);
-                }
-              } else {
-                console.warn("Compressor not available for threshold update");
-              }
-              return event.threshold;
-            },
-          }),
-        },
-        UPDATE_COMPRESSOR_RATIO: {
-          actions: assign({
-            compressorRatio: ({ event, context }) => {
-              if (context.compressor) {
-                try {
-                  // Set the ratio value and log it
-                  context.compressor.ratio.value = event.ratio;
-                  console.log(`Updated compressor ratio to ${event.ratio}`);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating compressor ratio:", error);
-                }
-              } else {
-                console.warn("Compressor not available for ratio update");
-              }
-              return event.ratio;
-            },
-          }),
-        },
-        UPDATE_COMPRESSOR_ATTACK: {
-          actions: assign({
-            compressorAttack: ({ event, context }) => {
-              if (context.compressor) {
-                try {
-                  // Set the attack value and log it
-                  context.compressor.attack.value = event.attack;
-                  console.log(`Updated compressor attack to ${event.attack}s`);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating compressor attack:", error);
-                }
-              } else {
-                console.warn("Compressor not available for attack update");
-              }
-              return event.attack;
-            },
-          }),
-        },
-        UPDATE_COMPRESSOR_RELEASE: {
-          actions: assign({
-            compressorRelease: ({ event, context }) => {
-              if (context.compressor) {
-                try {
-                  // Set the release value and log it
-                  context.compressor.release.value = event.release;
-                  console.log(
-                    `Updated compressor release to ${event.release}s`
-                  );
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating compressor release:", error);
-                }
-              } else {
-                console.warn("Compressor not available for release update");
-              }
-              return event.release;
-            },
-          }),
-        },
-        UPDATE_COMPRESSOR_KNEE: {
-          actions: assign({
-            compressorKnee: ({ event, context }) => {
-              if (context.compressor) {
-                try {
-                  // Set the knee value and log it
-                  context.compressor.knee.value = event.knee;
-                  console.log(`Updated compressor knee to ${event.knee}`);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating compressor knee:", error);
-                }
-              } else {
-                console.warn("Compressor not available for knee update");
-              }
-              return event.knee;
-            },
-          }),
-        },
-        UPDATE_COMPRESSOR_WET: {
-          actions: assign({
-            compressorWet: ({ event, context }) => {
-              // We'll use this value when connecting the compressor in the audio routing
-              console.log(`Updated compressor wet mix to ${event.wet}`);
-
-              // Ensure audio routing is properly connected
-              ensureAudioRouting(context);
-
-              return event.wet;
-            },
-          }),
-        },
         TOGGLE_EFFECT: {
           actions: assign({
             activeEffects: ({ event, context }) => {
@@ -1013,10 +703,6 @@ export const effectsMachine = setup({
                 if (effect === "distortion" && context.distortion) {
                   context.distortion.distortion = context.distortionAmount;
                 }
-                if (effect === "compressor" && context.compressor) {
-                  // We'll handle the wet parameter in the audio routing
-                  // Just store the parameter values
-                }
               } else if (!enabled && currentActiveEffects.includes(effect)) {
                 // Remove the effect from active effects
                 console.log(`Disabling effect: ${effect}`);
@@ -1033,10 +719,6 @@ export const effectsMachine = setup({
                 }
                 if (effect === "distortion" && context.distortion) {
                   context.distortion.distortion = 0;
-                }
-                if (effect === "compressor" && context.compressor) {
-                  // We'll handle the wet parameter in the audio routing
-                  // Just store the parameter values
                 }
               }
 
@@ -1075,11 +757,6 @@ export const connectToEffects = (
   // Connect to each active effect in parallel
   const activeEffects = context.activeEffects;
 
-  // Check if both compressor and distortion are active
-  const bothCompressorAndDistortionActive =
-    activeEffects.includes("compressor") &&
-    activeEffects.includes("distortion");
-
   // Connect to autoFilter if active
   if (activeEffects.includes("autoFilter") && context.autoFilter) {
     console.log("Connecting instrument to autoFilter");
@@ -1098,36 +775,10 @@ export const connectToEffects = (
     splitter.connect(context.reverb);
   }
 
-  // Handle compressor and distortion
-  if (
-    bothCompressorAndDistortionActive &&
-    context.compressor &&
-    context.distortion
-  ) {
-    // For compressor + distortion, we only connect to the compressor
-    // The routing function will chain compressor -> distortion
-    console.log("Connecting instrument to compressor-distortion chain");
-    splitter.connect(context.compressor);
-  } else {
-    // Connect to distortion if active but not in chain with compressor
-    if (
-      activeEffects.includes("distortion") &&
-      context.distortion &&
-      !bothCompressorAndDistortionActive
-    ) {
-      console.log("Connecting instrument to distortion only");
-      splitter.connect(context.distortion);
-    }
-
-    // Connect to compressor if active but not in chain with distortion
-    if (
-      activeEffects.includes("compressor") &&
-      context.compressor &&
-      !bothCompressorAndDistortionActive
-    ) {
-      console.log("Connecting instrument to compressor only");
-      splitter.connect(context.compressor);
-    }
+  // Connect to distortion if active
+  if (activeEffects.includes("distortion") && context.distortion) {
+    console.log("Connecting instrument to distortion");
+    splitter.connect(context.distortion);
   }
 
   // If no effects are active, connect directly to destination

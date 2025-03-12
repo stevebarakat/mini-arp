@@ -172,9 +172,24 @@ export const sequencerMachine = setup({
           actions: assign({
             grid: ({ context, event }) => {
               const newGrid = [...context.grid];
-              newGrid[event.rowIndex] = [...newGrid[event.rowIndex]];
-              newGrid[event.rowIndex][event.colIndex] =
-                !newGrid[event.rowIndex][event.colIndex];
+
+              // Create a deep copy of the grid
+              for (let i = 0; i < newGrid.length; i++) {
+                newGrid[i] = [...newGrid[i]];
+              }
+
+              // If the cell is already selected, just deselect it
+              if (newGrid[event.rowIndex][event.colIndex]) {
+                newGrid[event.rowIndex][event.colIndex] = false;
+              } else {
+                // If the cell is not selected, first deselect any other cells in the same column
+                for (let rowIdx = 0; rowIdx < newGrid.length; rowIdx++) {
+                  newGrid[rowIdx][event.colIndex] = false;
+                }
+                // Then select the clicked cell
+                newGrid[event.rowIndex][event.colIndex] = true;
+              }
+
               return newGrid;
             },
           }),
@@ -302,9 +317,24 @@ export const sequencerMachine = setup({
           actions: assign({
             grid: ({ context, event }) => {
               const newGrid = [...context.grid];
-              newGrid[event.rowIndex] = [...newGrid[event.rowIndex]];
-              newGrid[event.rowIndex][event.colIndex] =
-                !newGrid[event.rowIndex][event.colIndex];
+
+              // Create a deep copy of the grid
+              for (let i = 0; i < newGrid.length; i++) {
+                newGrid[i] = [...newGrid[i]];
+              }
+
+              // If the cell is already selected, just deselect it
+              if (newGrid[event.rowIndex][event.colIndex]) {
+                newGrid[event.rowIndex][event.colIndex] = false;
+              } else {
+                // If the cell is not selected, first deselect any other cells in the same column
+                for (let rowIdx = 0; rowIdx < newGrid.length; rowIdx++) {
+                  newGrid[rowIdx][event.colIndex] = false;
+                }
+                // Then select the clicked cell
+                newGrid[event.rowIndex][event.colIndex] = true;
+              }
+
               return newGrid;
             },
           }),

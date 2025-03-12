@@ -193,30 +193,7 @@ function App() {
   }
 
   function toggleDistortion(enabled: boolean) {
-    // When enabling distortion, also enable compressor for more aggressive sound
-    if (enabled) {
-      // First enable the compressor with aggressive settings
-      effectsSend({ type: "UPDATE_COMPRESSOR_THRESHOLD", threshold: -24 });
-      effectsSend({ type: "UPDATE_COMPRESSOR_RATIO", ratio: 4 });
-      effectsSend({ type: "UPDATE_COMPRESSOR_ATTACK", attack: 0.003 });
-      effectsSend({ type: "UPDATE_COMPRESSOR_RELEASE", release: 0.25 });
-      effectsSend({ type: "UPDATE_COMPRESSOR_KNEE", knee: 5 });
-      effectsSend({ type: "UPDATE_COMPRESSOR_WET", wet: 1 });
-      effectsSend({
-        type: "TOGGLE_EFFECT",
-        effect: "compressor",
-        enabled: true,
-      });
-    } else {
-      // When disabling distortion, also disable the compressor
-      effectsSend({
-        type: "TOGGLE_EFFECT",
-        effect: "compressor",
-        enabled: false,
-      });
-    }
-
-    // Then toggle the distortion effect
+    // Toggle the distortion effect
     effectsSend({ type: "TOGGLE_EFFECT", effect: "distortion", enabled });
   }
 

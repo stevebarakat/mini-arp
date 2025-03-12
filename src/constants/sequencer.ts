@@ -5,7 +5,7 @@ export const MAX_PITCH_SHIFT = 24; // 2 octaves up
 export const DEFAULT_PITCH = 0;
 
 // Default pattern for the sequencer grid
-// Creates an ascending arpeggio pattern
+// Creates an ascending arpeggio pattern with only one note per column
 export const DEFAULT_PATTERN = [
   [true, false, false, false, false, false, false, false], // B
   [false, true, false, false, false, false, false, true], // G
@@ -113,16 +113,6 @@ export const DISTORTION_CONFIG = {
   oversample: "4x" as "none" | "2x" | "4x", // Oversampling (none, 2x, 4x)
 };
 
-// Configuration for the compressor effect
-export const COMPRESSOR_CONFIG = {
-  threshold: -24, // Threshold in dB (typical range: -60 to 0)
-  ratio: 4, // Compression ratio (typical range: 1 to 20)
-  attack: 0.003, // Attack time in seconds (typical range: 0.001 to 1)
-  release: 0.25, // Release time in seconds (typical range: 0.01 to 1)
-  knee: 5, // Knee width in dB (typical range: 0 to 40)
-  wet: 1, // Mix between dry and wet signal (0-1)
-};
-
 // Min and max values for effect parameters
 export const EFFECT_PARAM_RANGES = {
   // Delay parameters
@@ -135,13 +125,6 @@ export const EFFECT_PARAM_RANGES = {
 
   // Distortion parameters
   distortion: { min: 0, max: 1 }, // Distortion amount range
-
-  // Compressor parameters
-  threshold: { min: -60, max: 0 }, // Threshold range in dB
-  ratio: { min: 1, max: 20 }, // Ratio range
-  attack: { min: 0.001, max: 0.5 }, // Attack time range in seconds
-  release: { min: 0.01, max: 1 }, // Release time range in seconds
-  knee: { min: 0, max: 40 }, // Knee width range in dB
 
   // Common parameters
   wet: { min: 0, max: 1 }, // Wet mix range for all effects
