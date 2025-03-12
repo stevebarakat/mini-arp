@@ -12,7 +12,13 @@ export function PitchControl({ pitch, onPitchChange }: PitchControlProps) {
 
   return (
     <div className="pitch-control">
-      <label htmlFor="pitch">Pitch Shift:</label>
+      <div>
+        <label htmlFor="pitch">Pitch Shift:</label>{" "}
+        <output>
+          {pitch > 0 ? "+" : ""}
+          {pitch} semitones
+        </output>
+      </div>
       <input
         type="range"
         id="pitch"
@@ -21,10 +27,6 @@ export function PitchControl({ pitch, onPitchChange }: PitchControlProps) {
         value={pitch}
         onChange={handleChange}
       />
-      <span>
-        {pitch > 0 ? "+" : ""}
-        {pitch} semitones
-      </span>
     </div>
   );
 }

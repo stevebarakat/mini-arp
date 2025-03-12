@@ -12,7 +12,9 @@ export function TempoControl({ tempo, onTempoChange }: TempoControlProps) {
 
   return (
     <div className="tempo-control">
-      <label htmlFor="tempo">Tempo:</label>
+      <div>
+        <label htmlFor="tempo">Tempo:</label> <output>{tempo} BPM</output>
+      </div>
       <input
         type="range"
         id="tempo"
@@ -21,7 +23,6 @@ export function TempoControl({ tempo, onTempoChange }: TempoControlProps) {
         value={tempo}
         onChange={handleChange}
       />
-      <span>{tempo} BPM</span>
     </div>
   );
 }

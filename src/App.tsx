@@ -76,6 +76,7 @@ function App() {
     effectsState.context.effectsBus,
     sequencerSend,
     effectsState.matches,
+    effectsState,
   ]);
 
   async function togglePlayback() {
@@ -207,7 +208,12 @@ function App() {
       <div className="sequencer">
         <h1>Tone.js Arpeggiator</h1>
 
+        <div className="controls-container">
+          <TempoControl tempo={tempo} onTempoChange={updateTempo} />
+          <PitchControl pitch={pitch} onPitchChange={updatePitch} />
+        </div>
         <SequencerGrid
+          pitch={pitch}
           grid={grid}
           currentStep={currentStep}
           onToggleCell={toggleCell}
@@ -221,11 +227,6 @@ function App() {
           onStartSequence={togglePlayback}
           onStopSequence={togglePlayback}
         />
-
-        <div className="controls-container">
-          <TempoControl tempo={tempo} onTempoChange={updateTempo} />
-          <PitchControl pitch={pitch} onPitchChange={updatePitch} />
-        </div>
 
         <h2>Effects</h2>
         <div className="effects-panel">
