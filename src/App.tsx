@@ -213,7 +213,6 @@ function App() {
           <PitchControl pitch={pitch} onPitchChange={updatePitch} />
         </div>
         <SequencerGrid
-          pitch={pitch}
           grid={grid}
           currentStep={currentStep}
           onToggleCell={toggleCell}
