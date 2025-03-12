@@ -125,12 +125,16 @@ const ensureAudioRouting = (context: EffectsContext) => {
     if (context.distortion) context.distortion.disconnect();
     if (context.effectsBus) context.effectsBus.disconnect();
 
-    // Create a final summing bus that goes to destination
-    const finalBus = new Tone.Gain().toDestination();
+    // Create a more aggressive limiter setup
+    const preGain = new Tone.Gain(89); // Drive the input signal harder
+    const limiter = new Tone.Limiter(-18); // Lower threshold for more aggressive limiting
+    const finalBus = new Tone.Gain(8.5); // Boost the final output
+
+    // Chain the final bus through the drive -> limiter -> destination
+    finalBus.chain(preGain, limiter, Tone.Destination);
 
     // Serial connection for autoFilter
     if (context.autoFilter) {
-      // AutoFilter -> effectsBus -> finalBus
       context.autoFilter.chain(context.effectsBus, finalBus);
       console.log("Connected autoFilter serially");
     }
@@ -164,6 +168,8 @@ const ensureAudioRouting = (context: EffectsContext) => {
       context.effectsBus.connect(finalBus);
       console.log("Connected effectsBus directly to finalBus");
     }
+
+    console.log("Added aggressive limiter chain to final output");
   } catch (error) {
     console.error("Error connecting effects:", error);
     routingSuccess = false;
