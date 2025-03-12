@@ -6,6 +6,7 @@ import { DelayControl } from "./components/DelayControl";
 import { ReverbControl } from "./components/ReverbControl";
 import { DistortionControl } from "./components/DistortionControl";
 import { Keyboard } from "./components/Keyboard";
+import { HiHatPattern } from "./components/HiHatPattern";
 import { useMachine } from "@xstate/react";
 import { sequencerMachine } from "./machines/sequencerMachine";
 import { effectsMachine } from "./machines/effectsMachine";
@@ -21,7 +22,8 @@ function App() {
   const [effectsState, effectsSend] = useMachine(effectsMachine);
   const isConnectedRef = useRef(false);
 
-  const { grid, tempo, pitch, currentStep, synth } = sequencerState.context;
+  const { grid, tempo, pitch, currentStep, synth, hiHatPattern } =
+    sequencerState.context;
 
   const {
     filterFrequency,
@@ -203,6 +205,10 @@ function App() {
     return activeEffects.includes(effect);
   }
 
+  const toggleHiHat = (step: number) => {
+    sequencerSend({ type: "TOGGLE_HI_HAT", step });
+  };
+
   return (
     <div className="container">
       <div className="sequencer">
@@ -214,8 +220,14 @@ function App() {
         </div>
         <SequencerGrid
           grid={grid}
-          currentStep={currentStep}
+          currentStep={currentStep % 8}
           onToggleCell={toggleCell}
+        />
+
+        <HiHatPattern
+          pattern={hiHatPattern}
+          currentStep={currentStep}
+          onToggleStep={toggleHiHat}
         />
 
         <Keyboard

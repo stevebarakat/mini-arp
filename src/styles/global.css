@@ -1,0 +1,45 @@
+.hi-hat-pattern {
+  margin: 20px 0;
+  padding: 15px;
+  background: #2a2a2a;
+  border-radius: 8px;
+}
+
+.hi-hat-pattern .pattern-label {
+  color: #fff;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.hi-hat-pattern .pattern-grid {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  gap: 4px;
+  background: #1a1a1a;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.hi-hat-pattern .pattern-cell {
+  aspect-ratio: 1;
+  background: #333;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hi-hat-pattern .pattern-cell:hover {
+  background: #444;
+}
+
+.hi-hat-pattern .pattern-cell.active {
+  background: #4caf50;
+}
+
+.hi-hat-pattern .pattern-cell.current {
+  border: 2px solid #fff;
+}
+
+.hi-hat-pattern .pattern-cell.active.current {
+  background: #66bb6a;
+}

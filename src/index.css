@@ -506,3 +506,50 @@ input:checked + .toggle-slider:before {
   color: #666;
   font-style: italic;
 }
+
+.hi-hat-pattern {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f8fafc;
+  border-radius: var(--border-radius);
+}
+
+.hi-hat-pattern .pattern-label {
+  color: var(--text-color);
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hi-hat-pattern .pattern-grid {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  gap: 4px;
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.hi-hat-pattern .pattern-cell {
+  aspect-ratio: 1;
+  background: #e2e8f0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hi-hat-pattern .pattern-cell:hover {
+  background: #cbd5e1;
+}
+
+.hi-hat-pattern .pattern-cell.active {
+  background: var(--primary-color);
+}
+
+.hi-hat-pattern .pattern-cell.current {
+  border: 2px solid var(--primary-color);
+}
+
+.hi-hat-pattern .pattern-cell.active.current {
+  background: #4f46e5;
+}

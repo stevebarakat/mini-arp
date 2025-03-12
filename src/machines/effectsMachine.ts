@@ -126,50 +126,58 @@ const ensureAudioRouting = (context: EffectsContext) => {
     if (context.effectsBus) context.effectsBus.disconnect();
 
     // Create a more aggressive limiter setup
-    const preGain = new Tone.Gain(89); // Drive the input signal harder
+    const preGain = new Tone.Gain(0.89); // Drive the input signal harder
     const limiter = new Tone.Limiter(-18); // Lower threshold for more aggressive limiting
-    const finalBus = new Tone.Gain(8.5); // Boost the final output
+    const finalBus = new Tone.Gain(0.85); // Boost the final output
 
     // Chain the final bus through the drive -> limiter -> destination
     finalBus.chain(preGain, limiter, Tone.Destination);
 
-    // Serial connection for autoFilter
-    if (context.autoFilter) {
-      context.autoFilter.chain(context.effectsBus, finalBus);
-      console.log("Connected autoFilter serially");
+    // Create three parallel paths
+    const filterDistortionPath = new Tone.Gain();
+    const delayPath = new Tone.Gain();
+    const reverbPath = new Tone.Gain();
+
+    // Connect input to all paths
+    context.effectsBus.connect(filterDistortionPath);
+    context.effectsBus.connect(delayPath);
+    context.effectsBus.connect(reverbPath);
+
+    // Path 1: AutoFilter -> Distortion path
+    if (context.autoFilter && context.distortion) {
+      filterDistortionPath.chain(
+        context.autoFilter,
+        context.distortion,
+        finalBus
+      );
+      console.log("Connected autoFilter -> distortion path");
+    } else if (context.autoFilter) {
+      filterDistortionPath.chain(context.autoFilter, finalBus);
+      console.log("Connected autoFilter path only");
+    } else if (context.distortion) {
+      filterDistortionPath.chain(context.distortion, finalBus);
+      console.log("Connected distortion path only");
+    } else {
+      filterDistortionPath.connect(finalBus);
     }
 
-    // Parallel connections that all go to the final bus
+    // Path 2: Clean delay path
     if (context.delay) {
-      context.effectsBus.connect(context.delay);
-      context.delay.connect(finalBus);
-      console.log("Connected delay in parallel");
+      delayPath.chain(context.delay, finalBus);
+      console.log("Connected clean delay path");
+    } else {
+      delayPath.connect(finalBus);
     }
 
+    // Path 3: Clean reverb path
     if (context.reverb) {
-      context.effectsBus.connect(context.reverb);
-      context.reverb.connect(finalBus);
-      console.log("Connected reverb in parallel");
+      reverbPath.chain(context.reverb, finalBus);
+      console.log("Connected clean reverb path");
+    } else {
+      reverbPath.connect(finalBus);
     }
 
-    if (context.distortion) {
-      context.effectsBus.connect(context.distortion);
-      context.distortion.connect(finalBus);
-      console.log("Connected distortion in parallel");
-    }
-
-    // If no effects are active, connect effectsBus directly to finalBus
-    if (
-      !context.autoFilter &&
-      !context.delay &&
-      !context.reverb &&
-      !context.distortion
-    ) {
-      context.effectsBus.connect(finalBus);
-      console.log("Connected effectsBus directly to finalBus");
-    }
-
-    console.log("Added aggressive limiter chain to final output");
+    console.log("Added parallel processing paths with shared limiter");
   } catch (error) {
     console.error("Error connecting effects:", error);
     routingSuccess = false;
