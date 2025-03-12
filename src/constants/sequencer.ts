@@ -7,10 +7,78 @@ export const DEFAULT_PITCH = 0;
 // Default pattern for the sequencer grid
 // Creates an ascending arpeggio pattern with only one note per column
 export const DEFAULT_PATTERN = [
-  [true, false, false, false, false, false, false, false], // B
-  [false, true, false, false, false, false, false, true], // G
-  [false, false, true, false, true, false, true, false], // E
-  [false, false, false, true, false, true, false, false], // C
+  [
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+  ], // B
+  [
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+  ], // G
+  [
+    false,
+    false,
+    true,
+    false,
+    true,
+    false,
+    true,
+    false,
+    false,
+    false,
+    true,
+    false,
+    true,
+    false,
+    true,
+    false,
+  ], // E
+  [
+    false,
+    false,
+    false,
+    true,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    true,
+    false,
+    false,
+  ], // C
 ];
 
 // Helper function to transpose a note by semitones
@@ -45,7 +113,7 @@ export function transposeNote(note: string, semitones: number): string {
 export const NOTES = BASE_NOTES.map(
   (note) => `${note}${DEFAULT_OCTAVE}`
 ) as string[];
-export const STEPS = 8;
+export const STEPS = 16;
 export const MIN_TEMPO = 60;
 export const MAX_TEMPO = 200;
 export const DEFAULT_TEMPO = 120;

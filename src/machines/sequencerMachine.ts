@@ -80,7 +80,7 @@ export const sequencerMachine = setup({
     stepTracker: fromCallback(({ sendBack }) => {
       const transport = Tone.getTransport();
       const id = transport.scheduleRepeat(() => {
-        const step = Math.floor(transport.ticks / 96) % 8;
+        const step = Math.floor(transport.ticks / 96) % 16;
         sendBack({ type: "STEP_CHANGE", step });
       }, "8n");
 
@@ -258,7 +258,7 @@ export const sequencerMachine = setup({
                   }
                 });
               },
-              [0, 1, 2, 3, 4, 5, 6, 7],
+              [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
               "8n"
             );
 

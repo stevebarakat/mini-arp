@@ -18,7 +18,6 @@ body {
 }
 
 .container {
-  max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
   width: 100%;
@@ -80,7 +79,7 @@ h1 {
 
 .note-row {
   display: grid;
-  grid-template-columns: repeat(8, var(--grid-cell-size));
+  grid-template-columns: repeat(16, var(--grid-cell-size));
   gap: 8px;
 }
 
