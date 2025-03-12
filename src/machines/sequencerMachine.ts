@@ -158,7 +158,7 @@ export const sequencerMachine = setup({
           if (context.sequence) {
             context.sequence.stop();
           }
-          Tone.Transport.stop();
+          Tone.getTransport().stop();
         },
       ],
       on: {
@@ -196,7 +196,7 @@ export const sequencerMachine = setup({
               tempo: ({ event }) => event.tempo,
             }),
             ({ context }) => {
-              Tone.Transport.bpm.value = context.tempo;
+              Tone.getTransport().bpm.value = context.tempo;
             },
           ],
         },
@@ -261,7 +261,7 @@ export const sequencerMachine = setup({
       entry: [
         ({ context }) => {
           console.log("Entering playing state");
-          Tone.Transport.bpm.value = context.tempo;
+          Tone.getTransport().bpm.value = context.tempo;
         },
         assign({
           sequence: ({ context }) => {
@@ -306,7 +306,7 @@ export const sequencerMachine = setup({
 
             // Start the sequence
             seq.start(0);
-            Tone.Transport.start();
+            Tone.getTransport().start();
 
             return seq;
           },
@@ -351,7 +351,7 @@ export const sequencerMachine = setup({
               tempo: ({ event }) => event.tempo,
             }),
             ({ context }) => {
-              Tone.Transport.bpm.value = context.tempo;
+              Tone.getTransport().bpm.value = context.tempo;
             },
           ],
         },
@@ -427,7 +427,7 @@ export const sequencerMachine = setup({
             context.sequence.stop();
           }
           if (context.stepTrackerId !== null) {
-            Tone.Transport.clear(context.stepTrackerId);
+            Tone.getTransport().clear(context.stepTrackerId);
           }
         },
       ],
