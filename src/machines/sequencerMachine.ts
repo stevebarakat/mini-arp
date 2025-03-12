@@ -64,8 +64,8 @@ const HI_HAT_CONFIG = {
   },
 };
 
-// Default hi-hat pattern (16 steps)
-export const DEFAULT_HI_HAT_PATTERN = Array(16)
+// Default hi-hat pattern (8 steps)
+export const DEFAULT_HI_HAT_PATTERN = Array(8)
   .fill(false)
   .map((_, i) => i % 2 === 0);
 
@@ -107,9 +107,9 @@ export const sequencerMachine = setup({
     stepTracker: fromCallback(({ sendBack }) => {
       const transport = Tone.getTransport();
       const id = transport.scheduleRepeat(() => {
-        const step = Math.floor(transport.ticks / 96) % 16; // Changed to 16 steps
+        const step = Math.floor(transport.ticks / 96) % 8;
         sendBack({ type: "STEP_CHANGE", step });
-      }, "16n");
+      }, "8n");
 
       // Send the ID back to the parent machine
       sendBack({ type: "STORE_STEP_TRACKER_ID", id });
@@ -288,7 +288,7 @@ export const sequencerMachine = setup({
                     if (context.synth) {
                       context.synth.triggerAttackRelease(
                         noteToPlay,
-                        "16n",
+                        "8n",
                         time
                       );
                     }
@@ -297,11 +297,11 @@ export const sequencerMachine = setup({
 
                 // Play hi-hat pattern
                 if (context.hiHatPattern[step] && context.noiseSynth) {
-                  context.noiseSynth.triggerAttackRelease("16n", time);
+                  context.noiseSynth.triggerAttackRelease("8n", time);
                 }
               },
-              Array.from({ length: 16 }, (_, i) => i), // 16-step sequence
-              "16n"
+              Array.from({ length: 8 }, (_, i) => i), // 8-step sequence
+              "8n"
             );
 
             // Start the sequence
