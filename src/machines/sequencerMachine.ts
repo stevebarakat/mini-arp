@@ -326,9 +326,56 @@ export const sequencerMachine = setup({
           }),
         },
         UPDATE_PITCH: {
-          actions: assign({
-            pitch: ({ event }) => event.pitch,
-          }),
+          actions: [
+            assign({
+              pitch: ({ event }) => event.pitch,
+            }),
+            ({ context }) => {
+              // Recreate the sequence with the new pitch value
+              if (context.sequence) {
+                context.sequence.dispose();
+                const seq = new Tone.Sequence(
+                  (time, step) => {
+                    // Play melodic pattern
+                    context.grid.forEach((row, rowIndex) => {
+                      if (row[step % 8]) {
+                        // Calculate the note to play based on the root note and row
+                        const baseNote = NOTES[rowIndex];
+                        const patternInterval = calculateSemitones(
+                          "C4",
+                          baseNote
+                        );
+                        const noteToPlay = transposeNote(
+                          context.rootNote,
+                          patternInterval + context.pitch
+                        );
+
+                        // Play the note
+                        if (context.synth) {
+                          context.synth.triggerAttackRelease(
+                            noteToPlay,
+                            "8n",
+                            time
+                          );
+                        }
+                      }
+                    });
+
+                    // Play hi-hat pattern
+                    if (context.hiHatPattern[step] && context.noiseSynth) {
+                      context.noiseSynth.triggerAttackRelease("8n", time);
+                    }
+                  },
+                  Array.from({ length: 8 }, (_, i) => i),
+                  "8n"
+                );
+
+                // Start the sequence from the current position
+                seq.start(0);
+                context.sequence = seq;
+              }
+            },
+          ],
         },
         SET_GRID: {
           actions: assign({
