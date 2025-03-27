@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from "react";
 import { SequencerGrid } from "./components/SequencerGrid";
 import { TempoControl } from "./components/TempoControl";
 import { PitchControl } from "./components/PitchControl";
@@ -5,14 +6,13 @@ import { FilterControl } from "./components/FilterControl";
 import { DelayControl } from "./components/DelayControl";
 import { ReverbControl } from "./components/ReverbControl";
 import { DistortionControl } from "./components/DistortionControl";
-import { Keyboard } from "./components/Keyboard";
 import { HiHatPattern } from "./components/HiHatPattern";
 import { useMachine } from "@xstate/react";
 import { sequencerMachine } from "./machines/sequencerMachine";
 import { effectsMachine } from "./machines/effectsMachine";
 import * as Tone from "tone";
-import { useEffect, useRef } from "react";
 import { EffectType } from "./machines/effectsMachine";
+import SharedKeyboard from "./components/SharedKeyboard/SharedKeyboard";
 import "./styles/global.css";
 
 // Define the state values type for type safety
@@ -41,6 +41,9 @@ function App() {
     distortionWet,
     activeEffects,
   } = effectsState.context;
+
+  // Add state for active keys
+  const [activeKeys, setActiveKeys] = useState<string[]>([]);
 
   // Initialize effects when the app starts
   useEffect(() => {
@@ -210,6 +213,22 @@ function App() {
     sequencerSend({ type: "TOGGLE_HI_HAT", step });
   };
 
+  const handleKeyClick = (note: string) => {
+    if (note) {
+      // Only handle actual notes, not empty strings
+      setRootNote(note);
+      setActiveKeys([note]); // Set the clicked note as active
+      if (!sequencerState.matches("playing")) {
+        togglePlayback();
+      }
+    } else {
+      setActiveKeys([]); // Clear active keys on release
+      if (sequencerState.matches("playing")) {
+        togglePlayback(); // Stop the sequencer when key is released
+      }
+    }
+  };
+
   return (
     <div className="container">
       <div className="sequencer">
@@ -233,13 +252,10 @@ function App() {
           isPlaying={sequencerState.matches("playing" as SequencerStateValue)}
         />
 
-        <Keyboard
-          synth={synth || undefined}
-          startOctave={3}
-          onNotePress={setRootNote}
-          isPlaying={sequencerState.matches("playing" as SequencerStateValue)}
-          onStartSequence={togglePlayback}
-          onStopSequence={togglePlayback}
+        <SharedKeyboard
+          activeKeys={activeKeys}
+          octaveRange={{ min: 3, max: 6 }}
+          onKeyClick={handleKeyClick}
         />
 
         <h2>Effects</h2>
