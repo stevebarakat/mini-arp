@@ -248,7 +248,7 @@ function App() {
 
         <SharedKeyboard
           activeKeys={activeKeys}
-          octaveRange={{ min: 3, max: 6 }}
+          octaveRange={{ min: 3, max: 9 }}
           onKeyClick={handleKeyClick}
         />
 
