@@ -53,7 +53,7 @@ export function ReverbControl({
           value={preDelay}
           min={EFFECT_PARAM_RANGES.preDelay.min}
           max={EFFECT_PARAM_RANGES.preDelay.max}
-          step={0.001}
+          step={0.01}
           label="PRE"
           unit="ms"
           onChange={onPreDelayChange}

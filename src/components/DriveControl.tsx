@@ -1,4 +1,3 @@
-import React from "react";
 import { EFFECT_PARAM_RANGES } from "../constants/sequencer";
 import { Knob } from "./Knob";
 
@@ -41,8 +40,8 @@ export function DriveControl({
       <div className="effect-knobs">
         <Knob
           value={drive}
-          min={EFFECT_PARAM_RANGES.drive.min}
-          max={EFFECT_PARAM_RANGES.drive.max}
+          min={EFFECT_PARAM_RANGES.distortion.min}
+          max={EFFECT_PARAM_RANGES.distortion.max}
           step={0.01}
           label="DRIVE"
           unit="%"
@@ -51,8 +50,8 @@ export function DriveControl({
         />
         <Knob
           value={tone}
-          min={EFFECT_PARAM_RANGES.tone.min}
-          max={EFFECT_PARAM_RANGES.tone.max}
+          min={0}
+          max={100}
           step={0.01}
           label="TONE"
           unit="%"
@@ -61,8 +60,8 @@ export function DriveControl({
         />
         <Knob
           value={level}
-          min={EFFECT_PARAM_RANGES.level.min}
-          max={EFFECT_PARAM_RANGES.level.max}
+          min={0}
+          max={100}
           step={0.01}
           label="LEVEL"
           unit="%"

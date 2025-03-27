@@ -121,7 +121,7 @@ export const EFFECT_PARAM_RANGES = {
 
   // Reverb parameters
   decay: { min: 0.1, max: 10 }, // Decay time range in seconds
-  preDelay: { min: 0, max: 0.1 }, // Pre-delay time range in seconds
+  preDelay: { min: 0, max: 1 }, // Pre-delay time range in seconds
 
   // Distortion parameters
   distortion: { min: 0, max: 1 }, // Distortion amount range

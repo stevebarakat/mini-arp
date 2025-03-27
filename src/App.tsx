@@ -13,6 +13,7 @@ import { effectsMachine } from "./machines/effectsMachine";
 import * as Tone from "tone";
 import { useEffect, useRef } from "react";
 import { EffectType } from "./machines/effectsMachine";
+import "./styles/global.css";
 
 // Define the state values type for type safety
 type SequencerStateValue = "playing" | "stopped";

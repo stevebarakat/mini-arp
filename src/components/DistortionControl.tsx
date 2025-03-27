@@ -23,7 +23,7 @@ export function DistortionControl({
     <div className="effect-control distortion-control">
       <div className="effect-header">
         <h3>DRIVE</h3>
-        <div className="led-indicator active"></div>
+        <div className={`led-indicator ${enabled ? "active" : ""}`}></div>
         <label className="toggle-switch">
           <input
             type="checkbox"
