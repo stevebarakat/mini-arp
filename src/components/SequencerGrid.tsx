@@ -1,18 +1,21 @@
-import React from "react";
 import { Grid } from "../machines/sequencerMachine";
 
 type SequencerGridProps = {
   grid: Grid;
   currentStep: number;
-  onToggleCell: (rowIndex: number, colIndex: number) => void;
   isPlaying: boolean;
+  pattern: boolean[];
+  onToggleStep: (step: number) => void;
+  onToggleCell: (rowIndex: number, colIndex: number) => void;
 };
 
 export function SequencerGrid({
   grid,
   currentStep,
-  onToggleCell,
   isPlaying,
+  pattern,
+  onToggleStep,
+  onToggleCell,
 }: SequencerGridProps) {
   return (
     <div className="sequencer-grid">
@@ -41,6 +44,24 @@ export function SequencerGrid({
             </div>
           </div>
         ))}
+        <div className="pattern-row">
+          <div className="row-label">H</div>
+          <div className="pattern-cells">
+            {pattern.map((isActive, step) => (
+              <div
+                key={step}
+                className={`pattern-cell ${isActive ? "selected" : ""} ${
+                  currentStep === step ? "current" : ""
+                }`}
+                onClick={() => onToggleStep(step)}
+                role="button"
+                tabIndex={0}
+                aria-label={`Hi-hat step ${step + 1}`}
+                aria-pressed={isActive}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
