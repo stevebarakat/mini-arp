@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { EFFECT_PARAM_RANGES } from "../constants/sequencer";
+import { Knob } from "./Knob";
 
 type DelayControlProps = {
   delayTime: number;
@@ -22,97 +23,52 @@ export function DelayControl({
   enabled,
   onToggle,
 }: DelayControlProps) {
-  // Log when props change to help with debugging
-  useEffect(() => {
-    console.log("DelayControl received props:", {
-      delayTime,
-      feedback,
-      wet,
-      enabled,
-    });
-  }, [delayTime, feedback, wet, enabled]);
-
-  const handleDelayTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    console.log("Changing delay time to:", newValue);
-    onDelayTimeChange(newValue);
-  };
-
-  const handleFeedbackChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    console.log("Changing feedback to:", newValue);
-    onFeedbackChange(newValue);
-  };
-
-  const handleWetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    console.log("Changing wet mix to:", newValue);
-    onWetChange(newValue);
-  };
-
-  const handleToggleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    console.log("Toggling delay:", newValue);
-    onToggle(newValue);
-  };
-
   return (
     <div className="effect-control delay-control">
       <div className="effect-header">
-        <h3>Delay</h3>
+        <h3>DELAY</h3>
+        <div className={`led-indicator ${enabled ? "active" : ""}`}></div>
         <label className="toggle-switch">
           <input
             type="checkbox"
             checked={enabled}
-            onChange={handleToggleChange}
+            onChange={(e) => onToggle(e.target.checked)}
           />
           <span className="toggle-slider"></span>
         </label>
       </div>
 
-      <div className="effect-param">
-        <label htmlFor="delay-time">Time:</label>
-        <input
-          type="range"
-          id="delay-time"
+      <div className="effect-knobs">
+        <Knob
+          value={delayTime}
           min={EFFECT_PARAM_RANGES.delayTime.min}
           max={EFFECT_PARAM_RANGES.delayTime.max}
-          step="0.01"
-          value={delayTime}
-          onChange={handleDelayTimeChange}
+          step={0.01}
+          label="TIME"
+          unit="s"
+          onChange={onDelayTimeChange}
           disabled={!enabled}
         />
-        <span>{delayTime.toFixed(2)} s</span>
-      </div>
-
-      <div className="effect-param">
-        <label htmlFor="delay-feedback">Feedback:</label>
-        <input
-          type="range"
-          id="delay-feedback"
+        <Knob
+          value={feedback}
           min={EFFECT_PARAM_RANGES.feedback.min}
           max={EFFECT_PARAM_RANGES.feedback.max}
-          step="0.01"
-          value={feedback}
-          onChange={handleFeedbackChange}
+          step={0.01}
+          label="FEED"
+          unit="%"
+          onChange={onFeedbackChange}
           disabled={!enabled}
         />
-        <span>{Math.round(feedback * 100)}%</span>
-      </div>
-
-      <div className="effect-param">
-        <label htmlFor="delay-wet">Mix:</label>
-        <input
-          type="range"
-          id="delay-wet"
+        <Knob
+          value={wet}
           min={EFFECT_PARAM_RANGES.wet.min}
           max={EFFECT_PARAM_RANGES.wet.max}
-          step="0.01"
-          value={wet}
-          onChange={handleWetChange}
+          step={0.01}
+          label="MIX"
+          unit="%"
+          onChange={onWetChange}
           disabled={!enabled}
         />
-        <span>{Math.round(wet * 100)}%</span>
       </div>
     </div>
   );

@@ -31,7 +31,7 @@ const KEYS = [
 
 export function Keyboard({
   synth,
-  startOctave = 3,
+  startOctave = 2,
   onNotePress,
   isPlaying,
   onStartSequence,
@@ -43,43 +43,33 @@ export function Keyboard({
   const handleNotePress = async (note: string) => {
     if (!synth) return;
 
-    // If sticky keys is on and we're pressing the same note, release it
     if (isStickyKeys && activeNote === note) {
       handleNoteRelease();
       return;
     }
 
-    // If sticky keys is on and we're pressing a different note, release the previous note
     if (isStickyKeys && activeNote) {
       synth.triggerRelease();
     }
 
-    // Play the note on the synth
     synth.triggerAttack(note);
     setActiveNote(note);
 
-    // Set the root note for the arpeggiator
     if (onNotePress) {
       onNotePress(note);
     }
 
-    // Start the sequence if not already playing
     if (!isPlaying) {
       await onStartSequence();
     }
   };
 
   const handleNoteRelease = () => {
-    if (!synth) return;
+    if (!synth || isStickyKeys) return;
 
-    // Don't release if sticky keys is on
-    if (isStickyKeys) return;
-
-    // Release the note on the synth
     synth.triggerRelease();
     setActiveNote(null);
 
-    // Stop the sequence if playing
     if (isPlaying) {
       onStopSequence();
     }
@@ -87,7 +77,6 @@ export function Keyboard({
 
   const toggleStickyKeys = () => {
     setIsStickyKeys(!isStickyKeys);
-    // If turning sticky keys off, release any active note
     if (isStickyKeys && activeNote && synth) {
       synth.triggerRelease();
       setActiveNote(null);
@@ -133,11 +122,13 @@ export function Keyboard({
           onClick={toggleStickyKeys}
           aria-pressed={isStickyKeys}
         >
-          Sticky Keys {isStickyKeys ? "On" : "Off"}
+          HOLD
         </button>
       </div>
-      <div className="keyboard">
-        {[0, 1].map((offset) => renderOctave(startOctave + offset))}
+      <div className="keyboard-section">
+        <div className="keyboard">
+          {[0, 1, 2, 3].map((offset) => renderOctave(startOctave + offset))}
+        </div>
       </div>
     </div>
   );

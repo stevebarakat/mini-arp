@@ -1,4 +1,5 @@
 import { MIN_TEMPO, MAX_TEMPO } from "../constants/sequencer";
+import { Knob } from "./Knob";
 
 type TempoControlProps = {
   tempo: number;
@@ -6,23 +7,21 @@ type TempoControlProps = {
 };
 
 export function TempoControl({ tempo, onTempoChange }: TempoControlProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onTempoChange(parseInt(e.target.value));
-  };
-
   return (
-    <div className="tempo-control">
-      <div>
-        <label htmlFor="tempo">Tempo:</label> <output>{tempo} BPM</output>
+    <div className="control-module tempo-control">
+      <div className="module-header">
+        <h3>TEMPO</h3>
       </div>
-      <input
-        type="range"
-        id="tempo"
-        min={MIN_TEMPO}
-        max={MAX_TEMPO}
-        value={tempo}
-        onChange={handleChange}
-      />
+      <div className="module-knobs">
+        <Knob
+          value={tempo}
+          min={MIN_TEMPO}
+          max={MAX_TEMPO}
+          step={1}
+          label="BPM"
+          onChange={onTempoChange}
+        />
+      </div>
     </div>
   );
 }

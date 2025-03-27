@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { EFFECT_PARAM_RANGES } from "../constants/sequencer";
+import { Knob } from "./Knob";
 
 type ReverbControlProps = {
   decay: number;
@@ -22,97 +23,52 @@ export function ReverbControl({
   enabled,
   onToggle,
 }: ReverbControlProps) {
-  // Log when props change to help with debugging
-  useEffect(() => {
-    console.log("ReverbControl received props:", {
-      decay,
-      preDelay,
-      wet,
-      enabled,
-    });
-  }, [decay, preDelay, wet, enabled]);
-
-  const handleDecayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    console.log("Changing decay to:", newValue);
-    onDecayChange(newValue);
-  };
-
-  const handlePreDelayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    console.log("Changing pre-delay to:", newValue);
-    onPreDelayChange(newValue);
-  };
-
-  const handleWetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    console.log("Changing wet mix to:", newValue);
-    onWetChange(newValue);
-  };
-
-  const handleToggleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    console.log("Toggling reverb:", newValue);
-    onToggle(newValue);
-  };
-
   return (
     <div className="effect-control reverb-control">
       <div className="effect-header">
-        <h3>Reverb</h3>
+        <h3>REVERB</h3>
+        <div className={`led-indicator ${enabled ? "active" : ""}`}></div>
         <label className="toggle-switch">
           <input
             type="checkbox"
             checked={enabled}
-            onChange={handleToggleChange}
+            onChange={(e) => onToggle(e.target.checked)}
           />
           <span className="toggle-slider"></span>
         </label>
       </div>
 
-      <div className="effect-param">
-        <label htmlFor="reverb-decay">Decay:</label>
-        <input
-          type="range"
-          id="reverb-decay"
+      <div className="effect-knobs">
+        <Knob
+          value={decay}
           min={EFFECT_PARAM_RANGES.decay.min}
           max={EFFECT_PARAM_RANGES.decay.max}
-          step="0.1"
-          value={decay}
-          onChange={handleDecayChange}
+          step={0.1}
+          label="DECAY"
+          unit="s"
+          onChange={onDecayChange}
           disabled={!enabled}
         />
-        <span>{decay.toFixed(1)} s</span>
-      </div>
-
-      <div className="effect-param">
-        <label htmlFor="reverb-predelay">Pre-Delay:</label>
-        <input
-          type="range"
-          id="reverb-predelay"
+        <Knob
+          value={preDelay}
           min={EFFECT_PARAM_RANGES.preDelay.min}
           max={EFFECT_PARAM_RANGES.preDelay.max}
-          step="0.001"
-          value={preDelay}
-          onChange={handlePreDelayChange}
+          step={0.001}
+          label="PRE"
+          unit="ms"
+          onChange={onPreDelayChange}
           disabled={!enabled}
         />
-        <span>{(preDelay * 1000).toFixed(0)} ms</span>
-      </div>
-
-      <div className="effect-param">
-        <label htmlFor="reverb-wet">Mix:</label>
-        <input
-          type="range"
-          id="reverb-wet"
+        <Knob
+          value={wet}
           min={EFFECT_PARAM_RANGES.wet.min}
           max={EFFECT_PARAM_RANGES.wet.max}
-          step="0.01"
-          value={wet}
-          onChange={handleWetChange}
+          step={0.01}
+          label="MIX"
+          unit="%"
+          onChange={onWetChange}
           disabled={!enabled}
         />
-        <span>{Math.round(wet * 100)}%</span>
       </div>
     </div>
   );

@@ -222,12 +222,14 @@ function App() {
           grid={grid}
           currentStep={currentStep % 8}
           onToggleCell={toggleCell}
+          isPlaying={sequencerState.matches("playing" as SequencerStateValue)}
         />
 
         <HiHatPattern
           pattern={hiHatPattern}
           currentStep={currentStep}
           onToggleStep={toggleHiHat}
+          isPlaying={sequencerState.matches("playing" as SequencerStateValue)}
         />
 
         <Keyboard

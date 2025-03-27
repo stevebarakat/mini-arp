@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { FILTER_PARAM_RANGES } from "../constants/sequencer";
+import { Knob } from "./Knob";
 
 type FilterControlProps = {
   frequency: number;
@@ -26,119 +27,61 @@ export function FilterControl({
   enabled,
   onToggle,
 }: FilterControlProps) {
-  // Log when props change to help with debugging
-  useEffect(() => {
-    console.log("FilterControl received props:", {
-      frequency,
-      depth,
-      wet,
-      resonance,
-      enabled,
-    });
-  }, [frequency, depth, wet, resonance, enabled]);
-
-  const handleFrequencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    console.log("Changing frequency to:", newValue);
-    onFrequencyChange(newValue);
-  };
-
-  const handleDepthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    console.log("Changing depth to:", newValue);
-    onDepthChange(newValue);
-  };
-
-  const handleWetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    console.log("Changing wet mix to:", newValue);
-    onWetChange(newValue);
-  };
-
-  const handleResonanceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    console.log("Changing resonance to:", newValue);
-    onResonanceChange(newValue);
-  };
-
-  const handleToggleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    console.log("Toggling filter:", newValue);
-    onToggle(newValue);
-  };
-
   return (
     <div className="effect-control filter-control">
       <div className="effect-header">
-        <h3>Auto-Filter</h3>
+        <h3>FILTER</h3>
+        <div className={`led-indicator ${enabled ? "active" : ""}`}></div>
         <label className="toggle-switch">
           <input
             type="checkbox"
             checked={enabled}
-            onChange={handleToggleChange}
+            onChange={(e) => onToggle(e.target.checked)}
           />
           <span className="toggle-slider"></span>
         </label>
       </div>
 
-      <div className="effect-param">
-        <label htmlFor="filter-frequency">LFO Speed:</label>
-        <input
-          type="range"
-          id="filter-frequency"
+      <div className="effect-knobs">
+        <Knob
+          value={frequency}
           min={FILTER_PARAM_RANGES.frequency.min}
           max={FILTER_PARAM_RANGES.frequency.max}
-          step="0.1"
-          value={frequency}
-          onChange={handleFrequencyChange}
+          step={0.1}
+          label="FREQ"
+          unit="Hz"
+          onChange={onFrequencyChange}
           disabled={!enabled}
         />
-        <span>{frequency.toFixed(1)} Hz</span>
-      </div>
-
-      <div className="effect-param">
-        <label htmlFor="filter-depth">Depth:</label>
-        <input
-          type="range"
-          id="filter-depth"
+        <Knob
+          value={depth}
           min={FILTER_PARAM_RANGES.depth.min}
           max={FILTER_PARAM_RANGES.depth.max}
-          step="0.01"
-          value={depth}
-          onChange={handleDepthChange}
+          step={0.01}
+          label="DEPTH"
+          unit="%"
+          onChange={onDepthChange}
           disabled={!enabled}
         />
-        <span>{Math.round(depth * 100)}%</span>
-      </div>
-
-      <div className="effect-param">
-        <label htmlFor="filter-resonance">Resonance:</label>
-        <input
-          type="range"
-          id="filter-resonance"
+        <Knob
+          value={resonance}
           min={FILTER_PARAM_RANGES.Q.min}
           max={FILTER_PARAM_RANGES.Q.max}
-          step="0.1"
-          value={resonance}
-          onChange={handleResonanceChange}
+          step={0.1}
+          label="RES"
+          onChange={onResonanceChange}
           disabled={!enabled}
         />
-        <span>{resonance.toFixed(1)}</span>
-      </div>
-
-      <div className="effect-param">
-        <label htmlFor="filter-wet">Mix:</label>
-        <input
-          type="range"
-          id="filter-wet"
+        <Knob
+          value={wet}
           min={FILTER_PARAM_RANGES.wet.min}
           max={FILTER_PARAM_RANGES.wet.max}
-          step="0.01"
-          value={wet}
-          onChange={handleWetChange}
+          step={0.01}
+          label="MIX"
+          unit="%"
+          onChange={onWetChange}
           disabled={!enabled}
         />
-        <span>{Math.round(wet * 100)}%</span>
       </div>
     </div>
   );
