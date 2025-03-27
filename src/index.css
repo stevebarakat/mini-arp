@@ -654,17 +654,9 @@ input:checked + .toggle-slider:before {
   border: 2px solid var(--knob-color);
 }
 
+/* Remove the LED dot from current pattern cells */
 .pattern-cell.current::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 4px;
-  height: 4px;
-  background: var(--knob-color);
-  border-radius: 50%;
-  animation: pulse 1s infinite;
+  display: none;
 }
 
 @media (max-width: 768px) {
