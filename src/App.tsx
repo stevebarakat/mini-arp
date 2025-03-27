@@ -11,7 +11,7 @@ import { sequencerMachine } from "./machines/sequencerMachine";
 import { effectsMachine } from "./machines/effectsMachine";
 import * as Tone from "tone";
 import { EffectType } from "./machines/effectsMachine";
-import SharedKeyboard from "./components/SharedKeyboard/SharedKeyboard";
+import Keyboard from "./components/Keyboard/Keyboard";
 import "./styles/global.css";
 
 // Define the state values type for type safety
@@ -240,13 +240,12 @@ function App() {
         <SequencerGrid
           grid={grid}
           currentStep={currentStep % 8}
-          isPlaying={sequencerState.matches("playing" as SequencerStateValue)}
           pattern={hiHatPattern}
           onToggleStep={toggleHiHat}
           onToggleCell={toggleCell}
         />
 
-        <SharedKeyboard
+        <Keyboard
           activeKeys={activeKeys}
           octaveRange={{ min: 3, max: 9 }}
           onKeyClick={handleKeyClick}

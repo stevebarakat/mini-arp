@@ -1,4 +1,3 @@
-import React from "react";
 import { EFFECT_PARAM_RANGES } from "../constants/sequencer";
 import { Knob } from "./Knob";
 

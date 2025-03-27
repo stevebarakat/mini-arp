@@ -1,4 +1,4 @@
-.shared-keyboard {
+.keyboard {
   position: relative;
   width: 100%;
   height: 160px;
@@ -154,7 +154,7 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .shared-keyboard {
+  .keyboard {
     height: 150px;
   }
 
@@ -169,7 +169,7 @@
 }
 
 @media (max-width: 480px) {
-  .shared-keyboard {
+  .keyboard {
     height: 120px;
   }
 
@@ -190,24 +190,31 @@
   margin-bottom: 4px;
 }
 
-.sticky-keys-button {
-  background: var(--control-bg, #333);
-  color: var(--text-color, #fff);
-  border: 2px solid var(--border-color, #666);
+.button {
+  background: var(--knob-color);
+  box-shadow: none;
+  color: var(--background-color);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   padding: 0.5rem 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.9rem;
+  width: fit-content;
+  opacity: 0.2;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-shadow: 0 0 10px var(--knob-color);
 }
 
-.sticky-keys-button:hover {
-  background: var(--control-hover-bg, #444);
+.button:hover {
+  background: var(--knob-color);
+  box-shadow: none;
 }
 
-.sticky-keys-button.active {
-  background: var(--accent-color, #ffd700);
-  color: var(--bg-color, #1a1a1a);
+.button.active {
+  background: var(--knob-color);
+  box-shadow: 0 0 10px var(--knob-color);
+  opacity: 1;
 }
 
 .octave-labels {

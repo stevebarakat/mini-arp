@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useImperativeHandle } from "react";
 import * as Tone from "tone";
 import { INSTRUMENT_TYPES } from "@/consts";
-import "./shared-keyboard.css";
+import "./keyboard.css";
 
 interface SharedKeyboardProps {
   activeKeys?: string[];
@@ -14,7 +14,7 @@ interface SharedKeyboardProps {
   }>;
 }
 
-const SharedKeyboard = ({
+const Keyboard = ({
   activeKeys = [],
   highlightedKeys = [],
   octaveRange = { min: 4, max: 5 },
@@ -612,13 +612,13 @@ const SharedKeyboard = ({
   return (
     <>
       <button
-        className={`sticky-keys-button ${isStickyKeys ? "active" : ""}`}
+        className={`button ${isStickyKeys ? "active" : ""}`}
         onClick={toggleStickyKeys}
         aria-pressed={isStickyKeys}
       >
-        HOLD
+        Hold
       </button>
-      <div className="shared-keyboard">
+      <div className="keyboard">
         <div className="piano-keys">
           {renderWhiteKeys()}
           {renderBlackKeys()}
@@ -628,4 +628,4 @@ const SharedKeyboard = ({
   );
 };
 
-export default SharedKeyboard;
+export default Keyboard;

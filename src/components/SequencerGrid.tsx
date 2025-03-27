@@ -3,7 +3,6 @@ import { Grid } from "../machines/sequencerMachine";
 type SequencerGridProps = {
   grid: Grid;
   currentStep: number;
-  isPlaying: boolean;
   pattern: boolean[];
   onToggleStep: (step: number) => void;
   onToggleCell: (rowIndex: number, colIndex: number) => void;
@@ -12,17 +11,12 @@ type SequencerGridProps = {
 export function SequencerGrid({
   grid,
   currentStep,
-  isPlaying,
   pattern,
   onToggleStep,
   onToggleCell,
 }: SequencerGridProps) {
   return (
     <div className="sequencer-grid">
-      <div className="grid-header">
-        <h3>SEQUENCER</h3>
-        <div className={`led-indicator ${isPlaying ? "pulsate" : ""}`}></div>
-      </div>
       <div className="grid-container">
         {grid.map((row, rowIndex) => (
           <div key={rowIndex} className="grid-row">
