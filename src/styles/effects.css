@@ -1,9 +1,9 @@
 .effectControl {
   background-color: hsl(220, 13%, 18%);
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 8px;
   width: 100%;
-  max-width: 600px;
+  max-height: fit-content;
 }
 
 .effectHeader {
@@ -16,7 +16,7 @@
 .effectHeader h3 {
   color: hsl(220, 13%, 90%);
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 

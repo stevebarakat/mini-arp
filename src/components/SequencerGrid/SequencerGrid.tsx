@@ -39,13 +39,13 @@ function SequencerGrid({
             </div>
           </div>
         ))}
-        <div className={styles.patternRow}>
+        <div className={styles.gridRow}>
           <div className={styles.rowLabel}>H</div>
-          <div className={styles.patternCells}>
+          <div className={styles.rowCells}>
             {pattern.map((isActive, step) => (
               <div
                 key={step}
-                className={`${styles.patternCell} ${
+                className={`${styles.gridCell} ${
                   isActive ? styles.selected : ""
                 } ${currentStep === step ? styles.current : ""}`}
                 onClick={() => onToggleStep(step)}
