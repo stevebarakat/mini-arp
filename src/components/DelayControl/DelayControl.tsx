@@ -1,6 +1,6 @@
 import { EFFECT_PARAM_RANGES } from "../../constants";
 import Knob from "../Knob";
-import styles from "./styles.module.css";
+import "@/styles/effects.css";
 
 type DelayControlProps = {
   delayTime: number;
@@ -24,23 +24,21 @@ export default function DelayControl({
   onToggle,
 }: DelayControlProps) {
   return (
-    <div className={styles.effectControl}>
-      <div className={styles.effectHeader}>
+    <div className="effectControl">
+      <div className="effectHeader">
         <h3>DELAY</h3>
-        <div
-          className={`${styles.ledIndicator} ${enabled ? styles.active : ""}`}
-        ></div>
-        <label className={styles.toggleSwitch}>
+        <div className={`ledIndicator ${enabled ? "active" : ""}`}></div>
+        <label className="toggleSwitch">
           <input
             type="checkbox"
             checked={enabled}
             onChange={(e) => onToggle(e.target.checked)}
           />
-          <span className={styles.toggleSlider}></span>
+          <span className="toggleSlider"></span>
         </label>
       </div>
 
-      <div className={styles.effectKnobs}>
+      <div className="effectKnobs">
         <Knob
           value={delayTime}
           min={EFFECT_PARAM_RANGES.delayTime.min}

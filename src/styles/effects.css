@@ -79,6 +79,6 @@ input:checked + .toggleSlider:before {
 
 .effectKnobs {
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
   justify-content: space-between;
 }

@@ -1,6 +1,6 @@
-import { EFFECT_PARAM_RANGES } from "../../constants";
-import Knob from "../Knob";
-import styles from "./styles.module.css";
+import { EFFECT_PARAM_RANGES } from "@/constants";
+import Knob from "@/components/Knob";
+import "@/styles/effects.css";
 
 type DistortionControlProps = {
   distortion: number;
@@ -20,23 +20,21 @@ export default function DistortionControl({
   onToggle,
 }: DistortionControlProps) {
   return (
-    <div className={styles.effectControl}>
-      <div className={styles.effectHeader}>
+    <div className="effectControl">
+      <div className="effectHeader">
         <h3>DRIVE</h3>
-        <div
-          className={`${styles.ledIndicator} ${enabled ? styles.active : ""}`}
-        ></div>
-        <label className={styles.toggleSwitch}>
+        <div className={`ledIndicator ${enabled ? "active" : ""}`}></div>
+        <label className="toggleSwitch">
           <input
             type="checkbox"
             checked={enabled}
             onChange={(e) => onToggle(e.target.checked)}
           />
-          <span className={styles.toggleSlider}></span>
+          <span className="toggleSlider"></span>
         </label>
       </div>
 
-      <div className={styles.effectKnobs}>
+      <div className="effectKnobs">
         <Knob
           value={distortion}
           min={EFFECT_PARAM_RANGES.distortion.min}

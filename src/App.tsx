@@ -13,6 +13,7 @@ import * as Tone from "tone";
 import { EffectType } from "./machines/effectsMachine";
 import Keyboard from "./components/Keyboard";
 import styles from "./styles/App.module.css";
+import "@/styles/effects.css";
 
 // Define the state values type for type safety
 type SequencerStateValue = "playing" | "stopped";
@@ -240,56 +241,53 @@ function App() {
             onToggleCell={toggleCell}
           />
           <div className={styles.controlGroup}>
-            <TempoControl tempo={tempo} onTempoChange={updateTempo} />
-            <PitchControl pitch={pitch} onPitchChange={updatePitch} />
+            <div className="effectControl">
+              <TempoControl tempo={tempo} onTempoChange={updateTempo} />
+              <PitchControl pitch={pitch} onPitchChange={updatePitch} />
+            </div>
+            <FilterControl
+              frequency={filterFrequency}
+              depth={filterDepth}
+              wet={filterWet}
+              resonance={filterResonance}
+              onFrequencyChange={updateFilterFrequency}
+              onDepthChange={updateFilterDepth}
+              onWetChange={updateFilterWet}
+              onResonanceChange={updateFilterResonance}
+              enabled={isEffectActive("autoFilter")}
+              onToggle={toggleFilter}
+            />
+            <DelayControl
+              delayTime={delayTime}
+              feedback={delayFeedback}
+              wet={delayWet}
+              onDelayTimeChange={updateDelayTime}
+              onFeedbackChange={updateDelayFeedback}
+              onWetChange={updateDelayWet}
+              enabled={isEffectActive("delay")}
+              onToggle={toggleDelay}
+            />
+            <ReverbControl
+              decay={reverbDecay}
+              preDelay={reverbPreDelay}
+              wet={reverbWet}
+              onDecayChange={updateReverbDecay}
+              onPreDelayChange={updateReverbPreDelay}
+              onWetChange={updateReverbWet}
+              enabled={isEffectActive("reverb")}
+              onToggle={toggleReverb}
+            />
+            <DistortionControl
+              distortion={distortionAmount}
+              wet={distortionWet}
+              onDistortionChange={updateDistortionAmount}
+              onWetChange={updateDistortionWet}
+              enabled={isEffectActive("distortion")}
+              onToggle={toggleDistortion}
+            />
           </div>
         </div>
-
         <Keyboard activeKeys={activeKeys} onKeyClick={handleKeyClick} />
-
-        <h2>Effects</h2>
-        <div className={styles.effectsPanel}>
-          <FilterControl
-            frequency={filterFrequency}
-            depth={filterDepth}
-            wet={filterWet}
-            resonance={filterResonance}
-            onFrequencyChange={updateFilterFrequency}
-            onDepthChange={updateFilterDepth}
-            onWetChange={updateFilterWet}
-            onResonanceChange={updateFilterResonance}
-            enabled={isEffectActive("autoFilter")}
-            onToggle={toggleFilter}
-          />
-          <DelayControl
-            delayTime={delayTime}
-            feedback={delayFeedback}
-            wet={delayWet}
-            onDelayTimeChange={updateDelayTime}
-            onFeedbackChange={updateDelayFeedback}
-            onWetChange={updateDelayWet}
-            enabled={isEffectActive("delay")}
-            onToggle={toggleDelay}
-          />
-          <ReverbControl
-            decay={reverbDecay}
-            preDelay={reverbPreDelay}
-            wet={reverbWet}
-            onDecayChange={updateReverbDecay}
-            onPreDelayChange={updateReverbPreDelay}
-            onWetChange={updateReverbWet}
-            enabled={isEffectActive("reverb")}
-            onToggle={toggleReverb}
-          />
-          <DistortionControl
-            distortion={distortionAmount}
-            wet={distortionWet}
-            onDistortionChange={updateDistortionAmount}
-            onWetChange={updateDistortionWet}
-            enabled={isEffectActive("distortion")}
-            onToggle={toggleDistortion}
-          />
-        </div>
       </div>
     </div>
   );

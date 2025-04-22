@@ -44,10 +44,10 @@
   gap: 0.5rem;
   justify-content: center;
   padding: 0.25rem;
-  background: var(--synth-bg);
+  /* background: var(--synth-bg); */
+  border: 1px solid hsl(0, 0%, 27%);
   border-radius: var(--border-radius);
   border: 1px solid hsl(0, 0%, 27%);
-  width: fit-content;
   height: fit-content;
 }
 
@@ -96,4 +96,83 @@
   .sequencer {
     padding: 0.25rem;
   }
+}
+
+.effectControl {
+  background-color: hsl(220, 13%, 18%);
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.effectHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.effectHeader h3 {
+  color: hsl(220, 13%, 90%);
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.ledIndicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: hsl(220, 13%, 30%);
+  transition: background-color 0.2s ease;
+}
+
+.ledIndicator.active {
+  background-color: hsl(120, 70%, 50%);
+}
+
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+
+.toggleSwitch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggleSlider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: hsl(220, 13%, 30%);
+  transition: 0.4s;
+  border-radius: 20px;
+}
+
+.toggleSlider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: hsl(220, 13%, 90%);
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggleSlider {
+  background-color: hsl(220, 70%, 55%);
+}
+
+input:checked + .toggleSlider:before {
+  transform: translateX(20px);
 }

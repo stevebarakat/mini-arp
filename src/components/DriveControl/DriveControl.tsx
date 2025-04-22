@@ -1,5 +1,6 @@
-import { EFFECT_PARAM_RANGES } from "../../constants";
-import Knob from "../Knob";
+import { EFFECT_PARAM_RANGES } from "@/constants";
+import Knob from "@/components/Knob";
+import "@/styles/effects.css";
 
 type DriveControlProps = {
   drive: number;
@@ -12,7 +13,7 @@ type DriveControlProps = {
   onToggle: (enabled: boolean) => void;
 };
 
-export default function DriveControl({
+function DriveControl({
   drive,
   tone,
   level,
@@ -23,21 +24,21 @@ export default function DriveControl({
   onToggle,
 }: DriveControlProps) {
   return (
-    <div className="effect-control drive-control">
-      <div className="effect-header">
+    <div className="effectControl">
+      <div className="effectHeader">
         <h3>DRIVE</h3>
-        <div className={`led-indicator ${enabled ? "active" : ""}`}></div>
-        <label className="toggle-switch">
+        <div className={`ledIndicator ${enabled ? "active" : ""}`}></div>
+        <label className="toggleSwitch">
           <input
             type="checkbox"
             checked={enabled}
             onChange={(e) => onToggle(e.target.checked)}
           />
-          <span className="toggle-slider"></span>
+          <span className="toggleSlider"></span>
         </label>
       </div>
 
-      <div className="effect-knobs">
+      <div className="effectKnobs">
         <Knob
           value={drive}
           min={EFFECT_PARAM_RANGES.distortion.min}
@@ -72,3 +73,5 @@ export default function DriveControl({
     </div>
   );
 }
+
+export default DriveControl;
