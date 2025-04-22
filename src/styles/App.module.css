@@ -1,7 +1,7 @@
 :root {
   --primary-color: hsl(51, 100%, 50%);
   --background-color: hsl(0, 0%, 10%);
-  --text-color: hsl(51, 100%, 90%);
+  --text-color: hsl(220, 13%, 90%);
   --grid-cell-size: 36px;
   --border-radius: 8px;
   --synth-bg: hsl(0, 0%, 18%);
@@ -86,28 +86,6 @@
   }
 }
 
-.effectControl {
-  background-color: hsl(220, 13%, 18%);
-  padding: 1.5rem;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 600px;
-}
-
-.effectHeader {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.effectHeader h3 {
-  color: hsl(220, 13%, 90%);
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 500;
-}
-
 .ledIndicator {
   width: 12px;
   height: 12px;
@@ -163,4 +141,38 @@ input:checked + .toggleSlider {
 
 input:checked + .toggleSlider:before {
   transform: translateX(20px);
+}
+
+.tabsRoot {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.tabsList {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1rem;
+}
+
+.tabsTrigger {
+  text-transform: uppercase;
+  font-weight: 600;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.tabsTrigger:hover {
+  color: var(--accent-color);
+}
+
+.tabsTrigger[data-state="active"] {
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.tabsContent {
+  padding: 1rem 0;
 }

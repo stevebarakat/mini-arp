@@ -13,7 +13,7 @@
   margin-bottom: 1.5rem;
 }
 
-.effectHeader h3 {
+.effectHeader span {
   color: hsl(220, 13%, 90%);
   margin: 0;
   font-size: 1rem;

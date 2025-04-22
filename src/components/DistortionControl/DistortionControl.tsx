@@ -22,7 +22,6 @@ export default function DistortionControl({
   return (
     <div className="effectControl">
       <div className="effectHeader">
-        <h3>DRIVE</h3>
         <div className={`ledIndicator ${enabled ? "active" : ""}`}></div>
         <label className="toggleSwitch">
           <input

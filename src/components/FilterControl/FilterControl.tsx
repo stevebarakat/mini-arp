@@ -30,7 +30,6 @@ export default function FilterControl({
   return (
     <div className="effectControl">
       <div className="effectHeader">
-        <h3>FILTER</h3>
         <div className={`ledIndicator ${enabled ? "active" : ""}`}></div>
         <label className="toggleSwitch">
           <input

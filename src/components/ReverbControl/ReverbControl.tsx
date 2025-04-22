@@ -26,7 +26,6 @@ function ReverbControl({
   return (
     <div className="effectControl">
       <div className="effectHeader">
-        <h3>REVERB</h3>
         <div className={`ledIndicator ${enabled ? "active" : ""}`}></div>
         <label className="toggleSwitch">
           <input

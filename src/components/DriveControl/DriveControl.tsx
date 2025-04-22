@@ -25,18 +25,15 @@ function DriveControl({
 }: DriveControlProps) {
   return (
     <div className="effectControl">
-      <div className="effectHeader">
-        <h3>DRIVE</h3>
-        <div className={`ledIndicator ${enabled ? "active" : ""}`}></div>
-        <label className="toggleSwitch">
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={(e) => onToggle(e.target.checked)}
-          />
-          <span className="toggleSlider"></span>
-        </label>
-      </div>
+      <div className={`ledIndicator ${enabled ? "active" : ""}`}></div>
+      <label className="toggleSwitch">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(e) => onToggle(e.target.checked)}
+        />
+        <span className="toggleSlider"></span>
+      </label>
 
       <div className="effectKnobs">
         <Knob

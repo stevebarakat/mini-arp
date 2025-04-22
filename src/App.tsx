@@ -14,9 +14,141 @@ import { EffectType } from "./machines/effectsMachine";
 import Keyboard from "./components/Keyboard";
 import styles from "./styles/App.module.css";
 import "@/styles/effects.css";
+import * as Tabs from "@radix-ui/react-tabs";
 
 // Define the state values type for type safety
 type SequencerStateValue = "playing" | "stopped";
+
+function EffectsTabs({
+  filterFrequency,
+  filterDepth,
+  filterWet,
+  filterResonance,
+  delayTime,
+  delayFeedback,
+  delayWet,
+  reverbDecay,
+  reverbPreDelay,
+  reverbWet,
+  distortionAmount,
+  distortionWet,
+  onFrequencyChange,
+  onDepthChange,
+  onFilterWetChange,
+  onResonanceChange,
+  onDelayTimeChange,
+  onFeedbackChange,
+  onDelayWetChange,
+  onDecayChange,
+  onPreDelayChange,
+  onReverbWetChange,
+  onDistortionChange,
+  onDistortionWetChange,
+  isEffectActive,
+  onToggleFilter,
+  onToggleDelay,
+  onToggleReverb,
+  onToggleDistortion,
+}: {
+  filterFrequency: number;
+  filterDepth: number;
+  filterWet: number;
+  filterResonance: number;
+  delayTime: number;
+  delayFeedback: number;
+  delayWet: number;
+  reverbDecay: number;
+  reverbPreDelay: number;
+  reverbWet: number;
+  distortionAmount: number;
+  distortionWet: number;
+  onFrequencyChange: (value: number) => void;
+  onDepthChange: (value: number) => void;
+  onFilterWetChange: (value: number) => void;
+  onResonanceChange: (value: number) => void;
+  onDelayTimeChange: (value: number) => void;
+  onFeedbackChange: (value: number) => void;
+  onDelayWetChange: (value: number) => void;
+  onDecayChange: (value: number) => void;
+  onPreDelayChange: (value: number) => void;
+  onReverbWetChange: (value: number) => void;
+  onDistortionChange: (value: number) => void;
+  onDistortionWetChange: (value: number) => void;
+  isEffectActive: (effect: EffectType) => boolean;
+  onToggleFilter: (enabled: boolean) => void;
+  onToggleDelay: (enabled: boolean) => void;
+  onToggleReverb: (enabled: boolean) => void;
+  onToggleDistortion: (enabled: boolean) => void;
+}) {
+  return (
+    <div className="effectControl">
+      <Tabs.Root className={styles.tabsRoot} defaultValue="filter">
+        <Tabs.List className={styles.tabsList}>
+          <Tabs.Trigger className={styles.tabsTrigger} value="filter">
+            Filter
+          </Tabs.Trigger>
+          <Tabs.Trigger className={styles.tabsTrigger} value="delay">
+            Delay
+          </Tabs.Trigger>
+          <Tabs.Trigger className={styles.tabsTrigger} value="reverb">
+            Reverb
+          </Tabs.Trigger>
+          <Tabs.Trigger className={styles.tabsTrigger} value="distortion">
+            Distortion
+          </Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content className={styles.tabsContent} value="filter">
+          <FilterControl
+            frequency={filterFrequency}
+            depth={filterDepth}
+            wet={filterWet}
+            resonance={filterResonance}
+            onFrequencyChange={onFrequencyChange}
+            onDepthChange={onDepthChange}
+            onWetChange={onFilterWetChange}
+            onResonanceChange={onResonanceChange}
+            enabled={isEffectActive("autoFilter")}
+            onToggle={onToggleFilter}
+          />
+        </Tabs.Content>
+        <Tabs.Content className={styles.tabsContent} value="delay">
+          <DelayControl
+            delayTime={delayTime}
+            feedback={delayFeedback}
+            wet={delayWet}
+            onDelayTimeChange={onDelayTimeChange}
+            onFeedbackChange={onFeedbackChange}
+            onWetChange={onDelayWetChange}
+            enabled={isEffectActive("delay")}
+            onToggle={onToggleDelay}
+          />
+        </Tabs.Content>
+        <Tabs.Content className={styles.tabsContent} value="reverb">
+          <ReverbControl
+            decay={reverbDecay}
+            preDelay={reverbPreDelay}
+            wet={reverbWet}
+            onDecayChange={onDecayChange}
+            onPreDelayChange={onPreDelayChange}
+            onWetChange={onReverbWetChange}
+            enabled={isEffectActive("reverb")}
+            onToggle={onToggleReverb}
+          />
+        </Tabs.Content>
+        <Tabs.Content className={styles.tabsContent} value="distortion">
+          <DistortionControl
+            distortion={distortionAmount}
+            wet={distortionWet}
+            onDistortionChange={onDistortionChange}
+            onWetChange={onDistortionWetChange}
+            enabled={isEffectActive("distortion")}
+            onToggle={onToggleDistortion}
+          />
+        </Tabs.Content>
+      </Tabs.Root>
+    </div>
+  );
+}
 
 function App() {
   const [sequencerState, sequencerSend] = useMachine(sequencerMachine);
@@ -245,45 +377,36 @@ function App() {
               <TempoControl tempo={tempo} onTempoChange={updateTempo} />
               <PitchControl pitch={pitch} onPitchChange={updatePitch} />
             </div>
-            <FilterControl
-              frequency={filterFrequency}
-              depth={filterDepth}
-              wet={filterWet}
-              resonance={filterResonance}
+            <EffectsTabs
+              filterFrequency={filterFrequency}
+              filterDepth={filterDepth}
+              filterWet={filterWet}
+              filterResonance={filterResonance}
+              delayTime={delayTime}
+              delayFeedback={delayFeedback}
+              delayWet={delayWet}
+              reverbDecay={reverbDecay}
+              reverbPreDelay={reverbPreDelay}
+              reverbWet={reverbWet}
+              distortionAmount={distortionAmount}
+              distortionWet={distortionWet}
               onFrequencyChange={updateFilterFrequency}
               onDepthChange={updateFilterDepth}
-              onWetChange={updateFilterWet}
+              onFilterWetChange={updateFilterWet}
               onResonanceChange={updateFilterResonance}
-              enabled={isEffectActive("autoFilter")}
-              onToggle={toggleFilter}
-            />
-            <DelayControl
-              delayTime={delayTime}
-              feedback={delayFeedback}
-              wet={delayWet}
               onDelayTimeChange={updateDelayTime}
               onFeedbackChange={updateDelayFeedback}
-              onWetChange={updateDelayWet}
-              enabled={isEffectActive("delay")}
-              onToggle={toggleDelay}
-            />
-            <ReverbControl
-              decay={reverbDecay}
-              preDelay={reverbPreDelay}
-              wet={reverbWet}
+              onDelayWetChange={updateDelayWet}
               onDecayChange={updateReverbDecay}
               onPreDelayChange={updateReverbPreDelay}
-              onWetChange={updateReverbWet}
-              enabled={isEffectActive("reverb")}
-              onToggle={toggleReverb}
-            />
-            <DistortionControl
-              distortion={distortionAmount}
-              wet={distortionWet}
+              onReverbWetChange={updateReverbWet}
               onDistortionChange={updateDistortionAmount}
-              onWetChange={updateDistortionWet}
-              enabled={isEffectActive("distortion")}
-              onToggle={toggleDistortion}
+              onDistortionWetChange={updateDistortionWet}
+              isEffectActive={isEffectActive}
+              onToggleFilter={toggleFilter}
+              onToggleDelay={toggleDelay}
+              onToggleReverb={toggleReverb}
+              onToggleDistortion={toggleDistortion}
             />
           </div>
         </div>
