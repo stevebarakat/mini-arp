@@ -1,6 +1,7 @@
 import React from "react";
-import { FILTER_PARAM_RANGES } from "../constants";
-import { Knob } from "./Knob";
+import { FILTER_PARAM_RANGES } from "../../constants";
+import { Knob } from "../Knob";
+import styles from "./styles.module.css";
 
 type FilterControlProps = {
   frequency: number;
@@ -28,21 +29,23 @@ export function FilterControl({
   onToggle,
 }: FilterControlProps) {
   return (
-    <div className="effect-control filter-control">
-      <div className="effect-header">
+    <div className={styles.effectControl}>
+      <div className={styles.effectHeader}>
         <h3>FILTER</h3>
-        <div className={`led-indicator ${enabled ? "active" : ""}`}></div>
-        <label className="toggle-switch">
+        <div
+          className={`${styles.ledIndicator} ${enabled ? styles.active : ""}`}
+        ></div>
+        <label className={styles.toggleSwitch}>
           <input
             type="checkbox"
             checked={enabled}
             onChange={(e) => onToggle(e.target.checked)}
           />
-          <span className="toggle-slider"></span>
+          <span className={styles.toggleSlider}></span>
         </label>
       </div>
 
-      <div className="effect-knobs">
+      <div className={styles.effectKnobs}>
         <Knob
           value={frequency}
           min={FILTER_PARAM_RANGES.frequency.min}

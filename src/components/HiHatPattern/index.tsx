@@ -1,4 +1,5 @@
 import React from "react";
+import styles from "./styles.module.css";
 
 type HiHatPatternProps = {
   pattern: boolean[];
@@ -14,21 +15,25 @@ export function HiHatPattern({
   isPlaying,
 }: HiHatPatternProps) {
   return (
-    <div className="hi-hat-grid">
-      <div className="grid-header">
+    <div className={styles.hiHatGrid}>
+      <div className={styles.gridHeader}>
         <h3>HI-HAT</h3>
-        <div className={`led-indicator ${isPlaying ? "pulsate" : ""}`}></div>
+        <div
+          className={`${styles.ledIndicator} ${
+            isPlaying ? styles.pulsate : ""
+          }`}
+        ></div>
       </div>
-      <div className="pattern-container">
-        <div className="pattern-row">
-          <div className="row-label">H</div>
-          <div className="pattern-cells">
+      <div className={styles.patternContainer}>
+        <div className={styles.patternRow}>
+          <div className={styles.rowLabel}>H</div>
+          <div className={styles.patternCells}>
             {pattern.map((isActive, step) => (
               <div
                 key={step}
-                className={`pattern-cell ${isActive ? "selected" : ""} ${
-                  currentStep === step ? "current" : ""
-                }`}
+                className={`${styles.patternCell} ${
+                  isActive ? styles.selected : ""
+                } ${currentStep === step ? styles.current : ""}`}
                 onClick={() => onToggleStep(step)}
                 role="button"
                 tabIndex={0}

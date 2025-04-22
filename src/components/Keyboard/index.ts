@@ -1,1 +1,1 @@
-export { default as Keyboard } from "./Keyboard";
+export { default } from "./Keyboard";

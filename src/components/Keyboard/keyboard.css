@@ -1,43 +1,77 @@
+:root {
+  --keyboard-bg: hsl(220, 13%, 15%);
+  --keyboard-border: hsl(220, 13%, 25%);
+  --key-white: hsl(0, 0%, 100%);
+  --key-white-hover: hsl(220, 10%, 95%);
+  --key-white-active: hsl(220, 70%, 85%);
+  --key-black: hsl(220, 13%, 18%);
+  --key-black-hover: hsl(220, 13%, 25%);
+  --key-black-active: hsl(220, 70%, 30%);
+  --highlight-color: hsl(45, 100%, 50%);
+  --text-primary: hsl(220, 13%, 95%);
+  --text-secondary: hsl(220, 13%, 65%);
+}
+
+.keyboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  padding: 2.5rem;
+  background: linear-gradient(
+    to bottom,
+    hsl(220, 13%, 18%),
+    var(--keyboard-bg)
+  );
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1),
+    inset 0 1px 1px hsl(220, 13%, 25%);
+  border: 1px solid var(--keyboard-border);
+}
+
 .keyboard {
   position: relative;
-  width: 100%;
-  height: 160px;
-  padding: 10px 0 0;
+  height: 220px;
+  background-color: var(--keyboard-bg);
+  border-radius: 12px;
+  padding: 1.25rem;
   overflow: hidden;
-  margin: 0 auto;
-  user-select: none;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 .piano-keys {
   position: relative;
-  width: 100%;
   height: 100%;
   display: flex;
-  transition: all 0.3s ease;
+  gap: 2px;
 }
 
 .white-key {
   flex: 1;
-  background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 0 0 4px 4px;
-  position: relative;
+  background: linear-gradient(to bottom, hsl(0, 0%, 98%), var(--key-white));
+  border: 1px solid hsl(220, 13%, 85%);
+  border-radius: 0 0 6px 6px;
   cursor: pointer;
-  transition: background-color 0.1s;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.1), inset 0 1px 1px hsl(0, 0%, 100%);
 }
 
 .white-key:hover {
-  background-color: #f0f0f0;
+  background: linear-gradient(
+    to bottom,
+    var(--key-white),
+    var(--key-white-hover)
+  );
+  transform: translateY(1px);
 }
 
 .white-key.active {
-  background-color: #e6f7ff;
+  background: var(--key-white-active);
+  transform: translateY(2px);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.1), inset 0 1px 1px hsl(220, 70%, 90%);
 }
 
 .white-key.highlighted {
-  background-color: #ffeb3b;
-  border: 1px solid #666;
-  border-top: none;
+  background-color: hsl(180, 70%, 80%);
 }
 
 .white-key.disabled {
@@ -52,26 +86,33 @@
 
 .black-key {
   position: absolute;
-  height: 60%;
-  background-color: #000;
+  width: 65%;
+  height: 65%;
+  background: linear-gradient(to bottom, hsl(220, 13%, 22%), var(--key-black));
   border-radius: 0 0 4px 4px;
   cursor: pointer;
-  z-index: 2;
-  transition: background-color 0.1s ease;
+  transition: all 0.15s ease;
+  z-index: 1;
+  box-shadow: 0 4px 6px rgb(0 0 0 / 0.3), inset 0 1px 1px hsl(220, 13%, 25%);
 }
 
 .black-key:hover {
-  background-color: #333;
+  background: linear-gradient(
+    to bottom,
+    var(--key-black-hover),
+    var(--key-black)
+  );
+  transform: translateY(1px);
 }
 
 .black-key.active {
-  background-color: #444;
+  background: var(--key-black-active);
+  transform: translateY(2px);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.2), inset 0 1px 1px hsl(220, 70%, 35%);
 }
 
 .black-key.highlighted {
-  background-color: #ffeb3b;
-  border: 1px solid #666;
-  border-top: none;
+  background-color: hsl(180, 70%, 30%);
 }
 
 .black-key.highlighted .black-key-label {
@@ -154,8 +195,14 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .keyboard-container {
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+
   .keyboard {
-    height: 150px;
+    height: 180px;
+    padding: 1rem;
   }
 
   .piano-keys {
@@ -169,8 +216,14 @@
 }
 
 @media (max-width: 480px) {
+  .keyboard-container {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
   .keyboard {
-    height: 120px;
+    height: 150px;
+    padding: 0.75rem;
   }
 
   .piano-keys {
@@ -191,30 +244,39 @@
 }
 
 .button {
-  background: var(--knob-color);
-  box-shadow: none;
-  color: var(--background-color);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
+  padding: 0.875rem 1.75rem;
+  background: linear-gradient(
+    to bottom,
+    hsl(220, 13%, 30%),
+    hsl(220, 13%, 25%)
+  );
+  color: var(--text-primary);
+  border: 1px solid var(--keyboard-border);
+  border-radius: 6px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  width: fit-content;
-  opacity: 0.2;
-  text-transform: uppercase;
-  font-weight: 600;
-  text-shadow: 0 0 10px var(--knob-color);
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.1), inset 0 1px 1px hsl(220, 13%, 35%);
 }
 
 .button:hover {
-  background: var(--knob-color);
-  box-shadow: none;
+  background: linear-gradient(
+    to bottom,
+    hsl(220, 13%, 35%),
+    hsl(220, 13%, 30%)
+  );
+  transform: translateY(1px);
 }
 
 .button.active {
-  background: var(--knob-color);
-  box-shadow: 0 0 10px var(--knob-color);
-  opacity: 1;
+  background: linear-gradient(
+    to bottom,
+    hsl(45, 100%, 50%),
+    hsl(45, 100%, 45%)
+  );
+  color: hsl(220, 13%, 15%);
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.1), inset 0 1px 1px hsl(45, 100%, 55%);
 }
 
 .octave-labels {

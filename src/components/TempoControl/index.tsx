@@ -1,5 +1,6 @@
-import { MIN_TEMPO, MAX_TEMPO } from "../constants";
-import { Knob } from "./Knob";
+import { MIN_TEMPO, MAX_TEMPO } from "../../constants";
+import { Knob } from "../Knob";
+import styles from "./styles.module.css";
 
 type TempoControlProps = {
   tempo: number;
@@ -8,11 +9,8 @@ type TempoControlProps = {
 
 export function TempoControl({ tempo, onTempoChange }: TempoControlProps) {
   return (
-    <div className="control-module tempo-control">
-      <div className="module-header">
-        <h3>TEMPO</h3>
-      </div>
-      <div className="module-knobs">
+    <div className={styles.controlModule}>
+      <div className={styles.moduleKnobs}>
         <Knob
           value={tempo}
           min={MIN_TEMPO}

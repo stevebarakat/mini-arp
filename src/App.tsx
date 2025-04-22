@@ -11,7 +11,7 @@ import { sequencerMachine } from "./machines/sequencerMachine";
 import { effectsMachine } from "./machines/effectsMachine";
 import * as Tone from "tone";
 import { EffectType } from "./machines/effectsMachine";
-import Keyboard from "./components/Keyboard/Keyboard";
+import Keyboard from "./components/Keyboard";
 import "./styles/global.css";
 
 // Define the state values type for type safety
@@ -234,9 +234,15 @@ function App() {
         <h1>Tone.js Arpeggiator</h1>
 
         <div className="controls-container">
-          <TempoControl tempo={tempo} onTempoChange={updateTempo} />
-          <PitchControl pitch={pitch} onPitchChange={updatePitch} />
+          <div className="control-group">
+            <TempoControl tempo={tempo} onTempoChange={updateTempo} />
+            <PitchControl pitch={pitch} onPitchChange={updatePitch} />
+          </div>
+          <div className="visualizer-container">
+            {/* Add your visualizer component here */}
+          </div>
         </div>
+
         <SequencerGrid
           grid={grid}
           currentStep={currentStep % 8}

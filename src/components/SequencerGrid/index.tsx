@@ -1,4 +1,5 @@
-import { Grid } from "../machines/sequencerMachine";
+import { Grid } from "../../machines/sequencerMachine";
+import styles from "./styles.module.css";
 
 type SequencerGridProps = {
   grid: Grid;
@@ -16,18 +17,18 @@ export function SequencerGrid({
   onToggleCell,
 }: SequencerGridProps) {
   return (
-    <div className="sequencer-grid">
-      <div className="grid-container">
+    <div className={styles.sequencerGrid}>
+      <div className={styles.gridContainer}>
         {grid.map((row, rowIndex) => (
-          <div key={rowIndex} className="grid-row">
-            <div className="row-label">{rowIndex + 1}</div>
-            <div className="row-cells">
+          <div key={rowIndex} className={styles.gridRow}>
+            <div className={styles.rowLabel}>{rowIndex + 1}</div>
+            <div className={styles.rowCells}>
               {row.map((isSelected, colIndex) => (
                 <div
                   key={colIndex}
-                  className={`grid-cell ${isSelected ? "selected" : ""} ${
-                    colIndex === currentStep ? "current" : ""
-                  }`}
+                  className={`${styles.gridCell} ${
+                    isSelected ? styles.selected : ""
+                  } ${colIndex === currentStep ? styles.current : ""}`}
                   onClick={() => onToggleCell(rowIndex, colIndex)}
                   role="button"
                   tabIndex={0}
@@ -38,15 +39,15 @@ export function SequencerGrid({
             </div>
           </div>
         ))}
-        <div className="pattern-row">
-          <div className="row-label">H</div>
-          <div className="pattern-cells">
+        <div className={styles.patternRow}>
+          <div className={styles.rowLabel}>H</div>
+          <div className={styles.patternCells}>
             {pattern.map((isActive, step) => (
               <div
                 key={step}
-                className={`pattern-cell ${isActive ? "selected" : ""} ${
-                  currentStep === step ? "current" : ""
-                }`}
+                className={`${styles.patternCell} ${
+                  isActive ? styles.selected : ""
+                } ${currentStep === step ? styles.current : ""}`}
                 onClick={() => onToggleStep(step)}
                 role="button"
                 tabIndex={0}

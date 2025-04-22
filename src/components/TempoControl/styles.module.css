@@ -1,0 +1,13 @@
+.controlModule {
+  background-color: hsl(220, 13%, 18%);
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.moduleKnobs {
+  display: flex;
+  gap: 2rem;
+  justify-content: space-between;
+}
