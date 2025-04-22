@@ -25,7 +25,6 @@ function DriveControl({
 }: DriveControlProps) {
   return (
     <div className="effectControl">
-      <div className={`ledIndicator ${enabled ? "active" : ""}`}></div>
       <label className="toggleSwitch">
         <input
           type="checkbox"

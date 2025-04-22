@@ -13,7 +13,7 @@ type DelayControlProps = {
   onToggle: (enabled: boolean) => void;
 };
 
-export default function DelayControl({
+function DelayControl({
   delayTime,
   feedback,
   wet,
@@ -21,22 +21,9 @@ export default function DelayControl({
   onFeedbackChange,
   onWetChange,
   enabled,
-  onToggle,
 }: DelayControlProps) {
   return (
     <div className="effectControl">
-      <div className="effectHeader">
-        <div className={`ledIndicator ${enabled ? "active" : ""}`}></div>
-        <label className="toggleSwitch">
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={(e) => onToggle(e.target.checked)}
-          />
-          <span className="toggleSlider"></span>
-        </label>
-      </div>
-
       <div className="effectKnobs">
         <Knob
           value={delayTime}
@@ -44,7 +31,7 @@ export default function DelayControl({
           max={EFFECT_PARAM_RANGES.delayTime.max}
           step={0.01}
           label="TIME"
-          unit="s"
+          unit="ms"
           onChange={onDelayTimeChange}
           disabled={!enabled}
         />
@@ -53,7 +40,7 @@ export default function DelayControl({
           min={EFFECT_PARAM_RANGES.feedback.min}
           max={EFFECT_PARAM_RANGES.feedback.max}
           step={0.01}
-          label="FEED"
+          label="FB"
           unit="%"
           onChange={onFeedbackChange}
           disabled={!enabled}
@@ -72,3 +59,5 @@ export default function DelayControl({
     </div>
   );
 }
+
+export default DelayControl;

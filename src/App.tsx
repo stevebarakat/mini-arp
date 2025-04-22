@@ -82,22 +82,46 @@ function EffectsTabs({
 }) {
   return (
     <div className="effectControl">
-      <Tabs.Root className={styles.tabsRoot} defaultValue="filter">
+      <Tabs.Root defaultValue="filter">
         <Tabs.List className={styles.tabsList}>
           <Tabs.Trigger className={styles.tabsTrigger} value="filter">
-            Filter
+            Filter{" "}
+            <div
+              className={`ledIndicator ${
+                isEffectActive("autoFilter") ? "active" : ""
+              }`}
+              onClick={() => onToggleFilter(!isEffectActive("autoFilter"))}
+            ></div>
           </Tabs.Trigger>
           <Tabs.Trigger className={styles.tabsTrigger} value="delay">
-            Delay
+            Delay{" "}
+            <div
+              className={`ledIndicator ${
+                isEffectActive("delay") ? "active" : ""
+              }`}
+              onClick={() => onToggleDelay(!isEffectActive("delay"))}
+            ></div>
           </Tabs.Trigger>
           <Tabs.Trigger className={styles.tabsTrigger} value="reverb">
-            Reverb
+            Reverb{" "}
+            <div
+              className={`ledIndicator ${
+                isEffectActive("reverb") ? "active" : ""
+              }`}
+              onClick={() => onToggleReverb(!isEffectActive("reverb"))}
+            ></div>
           </Tabs.Trigger>
           <Tabs.Trigger className={styles.tabsTrigger} value="distortion">
-            Distortion
+            Drive{" "}
+            <div
+              className={`ledIndicator ${
+                isEffectActive("distortion") ? "active" : ""
+              }`}
+              onClick={() => onToggleDistortion(!isEffectActive("distortion"))}
+            ></div>
           </Tabs.Trigger>
         </Tabs.List>
-        <Tabs.Content className={styles.tabsContent} value="filter">
+        <Tabs.Content value="filter">
           <FilterControl
             frequency={filterFrequency}
             depth={filterDepth}
@@ -111,7 +135,7 @@ function EffectsTabs({
             onToggle={onToggleFilter}
           />
         </Tabs.Content>
-        <Tabs.Content className={styles.tabsContent} value="delay">
+        <Tabs.Content value="delay">
           <DelayControl
             delayTime={delayTime}
             feedback={delayFeedback}
@@ -123,7 +147,7 @@ function EffectsTabs({
             onToggle={onToggleDelay}
           />
         </Tabs.Content>
-        <Tabs.Content className={styles.tabsContent} value="reverb">
+        <Tabs.Content value="reverb">
           <ReverbControl
             decay={reverbDecay}
             preDelay={reverbPreDelay}
@@ -135,7 +159,7 @@ function EffectsTabs({
             onToggle={onToggleReverb}
           />
         </Tabs.Content>
-        <Tabs.Content className={styles.tabsContent} value="distortion">
+        <Tabs.Content value="distortion">
           <DistortionControl
             distortion={distortionAmount}
             wet={distortionWet}
@@ -332,7 +356,6 @@ function App() {
   }
 
   function toggleDistortion(enabled: boolean) {
-    // Toggle the distortion effect
     effectsSend({ type: "TOGGLE_EFFECT", effect: "distortion", enabled });
   }
 

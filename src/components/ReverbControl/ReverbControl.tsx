@@ -21,22 +21,9 @@ function ReverbControl({
   onPreDelayChange,
   onWetChange,
   enabled,
-  onToggle,
 }: ReverbControlProps) {
   return (
     <div className="effectControl">
-      <div className="effectHeader">
-        <div className={`ledIndicator ${enabled ? "active" : ""}`}></div>
-        <label className="toggleSwitch">
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={(e) => onToggle(e.target.checked)}
-          />
-          <span className="toggleSlider"></span>
-        </label>
-      </div>
-
       <div className="effectKnobs">
         <Knob
           value={decay}

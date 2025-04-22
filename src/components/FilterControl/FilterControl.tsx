@@ -1,5 +1,5 @@
-import { FILTER_PARAM_RANGES } from "@/constants";
-import Knob from "@/components/Knob";
+import { EFFECT_PARAM_RANGES, FILTER_PARAM_RANGES } from "../../constants";
+import Knob from "../Knob";
 import "@/styles/effects.css";
 
 type FilterControlProps = {
@@ -15,7 +15,7 @@ type FilterControlProps = {
   onToggle: (enabled: boolean) => void;
 };
 
-export default function FilterControl({
+function FilterControl({
   frequency,
   depth,
   wet,
@@ -29,18 +29,6 @@ export default function FilterControl({
 }: FilterControlProps) {
   return (
     <div className="effectControl">
-      <div className="effectHeader">
-        <div className={`ledIndicator ${enabled ? "active" : ""}`}></div>
-        <label className="toggleSwitch">
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={(e) => onToggle(e.target.checked)}
-          />
-          <span className="toggleSlider"></span>
-        </label>
-      </div>
-
       <div className="effectKnobs">
         <Knob
           value={frequency}
@@ -58,8 +46,18 @@ export default function FilterControl({
           max={FILTER_PARAM_RANGES.depth.max}
           step={0.01}
           label="DEPTH"
-          unit="%"
+          unit=""
           onChange={onDepthChange}
+          disabled={!enabled}
+        />
+        <Knob
+          value={wet}
+          min={EFFECT_PARAM_RANGES.wet.min}
+          max={EFFECT_PARAM_RANGES.wet.max}
+          step={0.01}
+          label="MIX"
+          unit="%"
+          onChange={onWetChange}
           disabled={!enabled}
         />
         <Knob
@@ -68,20 +66,13 @@ export default function FilterControl({
           max={FILTER_PARAM_RANGES.Q.max}
           step={0.1}
           label="RES"
+          unit=""
           onChange={onResonanceChange}
-          disabled={!enabled}
-        />
-        <Knob
-          value={wet}
-          min={FILTER_PARAM_RANGES.wet.min}
-          max={FILTER_PARAM_RANGES.wet.max}
-          step={0.01}
-          label="MIX"
-          unit="%"
-          onChange={onWetChange}
           disabled={!enabled}
         />
       </div>
     </div>
   );
 }
+
+export default FilterControl;

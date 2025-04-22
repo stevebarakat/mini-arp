@@ -86,18 +86,6 @@
   }
 }
 
-.ledIndicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: hsl(220, 13%, 30%);
-  transition: background-color 0.2s ease;
-}
-
-.ledIndicator.active {
-  background-color: hsl(120, 70%, 50%);
-}
-
 .toggleSwitch {
   position: relative;
   display: inline-block;
@@ -143,13 +131,9 @@ input:checked + .toggleSlider:before {
   transform: translateX(20px);
 }
 
-.tabsRoot {
-  width: 100%;
-  margin-top: 1rem;
-}
-
 .tabsList {
   display: flex;
+  justify-content: space-between;
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 1rem;
 }
@@ -162,6 +146,10 @@ input:checked + .toggleSlider:before {
   color: var(--text-color);
   margin: 0;
   font-size: 0.95rem;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .tabsTrigger:hover {
@@ -171,8 +159,4 @@ input:checked + .toggleSlider:before {
 .tabsTrigger[data-state="active"] {
   color: var(--accent-color);
   border-bottom: 2px solid var(--accent-color);
-}
-
-.tabsContent {
-  padding: 1rem 0;
 }
