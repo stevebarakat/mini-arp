@@ -29,21 +29,6 @@ const Keyboard = ({
   const [isStickyKeys, setIsStickyKeys] = useState(false);
   const [stickyNote, setStickyNote] = useState<string | null>(null);
 
-  // Envelope state
-  const [attack, setAttack] = useState(0.02);
-  const [decay, setDecay] = useState(0.1);
-  const [sustain, setSustain] = useState(0.3);
-  const [release, setRelease] = useState(1);
-  const [attackCurve, setAttackCurve] = useState<"linear" | "exponential">(
-    "exponential"
-  );
-  const [decayCurve, setDecayCurve] = useState<"linear" | "exponential">(
-    "linear"
-  );
-  const [releaseCurve, setReleaseCurve] = useState<"linear" | "exponential">(
-    "exponential"
-  );
-
   // Keep track of currently playing notes
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
 
@@ -192,15 +177,6 @@ const Keyboard = ({
         }
 
         currentInstrument = new Tone.PolySynth(Tone.Synth, {
-          envelope: {
-            attack,
-            decay,
-            sustain,
-            release,
-            attackCurve,
-            decayCurve,
-            releaseCurve,
-          },
           oscillator: {
             type: "triangle",
           },
@@ -227,46 +203,7 @@ const Keyboard = ({
         currentInstrument.dispose();
       }
     };
-  }, [
-    instrumentType,
-    currentInstrumentType,
-    instrument,
-    attack,
-    decay,
-    sustain,
-    release,
-    attackCurve,
-    decayCurve,
-    releaseCurve,
-    activeNotes,
-  ]);
-
-  // Update synth parameters when envelope controls change
-  useEffect(() => {
-    if (instrument && isLoaded) {
-      instrument.set({
-        envelope: {
-          attack,
-          decay,
-          sustain,
-          release,
-          attackCurve,
-          decayCurve,
-          releaseCurve,
-        },
-      });
-    }
-  }, [
-    instrument,
-    isLoaded,
-    attack,
-    decay,
-    sustain,
-    release,
-    attackCurve,
-    decayCurve,
-    releaseCurve,
-  ]);
+  }, [instrumentType, currentInstrumentType]);
 
   // Modify playNote to use a longer note duration for better envelope effect
   const playNote = async (note: string) => {
