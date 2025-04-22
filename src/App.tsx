@@ -86,39 +86,47 @@ function EffectsTabs({
         <Tabs.List className={styles.tabsList}>
           <Tabs.Trigger className={styles.tabsTrigger} value="filter">
             Filter{" "}
-            <div
-              className={`ledIndicator ${
-                isEffectActive("autoFilter") ? "active" : ""
-              }`}
-              onClick={() => onToggleFilter(!isEffectActive("autoFilter"))}
-            ></div>
+            <label className="toggleSwitch">
+              <input
+                type="checkbox"
+                checked={isEffectActive("autoFilter")}
+                onChange={(e) => onToggleFilter(e.target.checked)}
+              />
+              <span className="toggleSlider"></span>
+            </label>
           </Tabs.Trigger>
           <Tabs.Trigger className={styles.tabsTrigger} value="delay">
             Delay{" "}
-            <div
-              className={`ledIndicator ${
-                isEffectActive("delay") ? "active" : ""
-              }`}
-              onClick={() => onToggleDelay(!isEffectActive("delay"))}
-            ></div>
+            <label className="toggleSwitch">
+              <input
+                type="checkbox"
+                checked={isEffectActive("delay")}
+                onChange={(e) => onToggleDelay(e.target.checked)}
+              />
+              <span className="toggleSlider"></span>
+            </label>
           </Tabs.Trigger>
           <Tabs.Trigger className={styles.tabsTrigger} value="reverb">
             Reverb{" "}
-            <div
-              className={`ledIndicator ${
-                isEffectActive("reverb") ? "active" : ""
-              }`}
-              onClick={() => onToggleReverb(!isEffectActive("reverb"))}
-            ></div>
+            <label className="toggleSwitch">
+              <input
+                type="checkbox"
+                checked={isEffectActive("reverb")}
+                onChange={(e) => onToggleReverb(e.target.checked)}
+              />
+              <span className="toggleSlider"></span>
+            </label>
           </Tabs.Trigger>
           <Tabs.Trigger className={styles.tabsTrigger} value="distortion">
             Drive{" "}
-            <div
-              className={`ledIndicator ${
-                isEffectActive("distortion") ? "active" : ""
-              }`}
-              onClick={() => onToggleDistortion(!isEffectActive("distortion"))}
-            ></div>
+            <label className="toggleSwitch">
+              <input
+                type="checkbox"
+                checked={isEffectActive("distortion")}
+                onChange={(e) => onToggleDistortion(e.target.checked)}
+              />
+              <span className="toggleSlider"></span>
+            </label>
           </Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content value="filter">

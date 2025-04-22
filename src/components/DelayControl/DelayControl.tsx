@@ -23,39 +23,37 @@ function DelayControl({
   enabled,
 }: DelayControlProps) {
   return (
-    <div className="effectControl">
-      <div className="effectKnobs">
-        <Knob
-          value={delayTime}
-          min={EFFECT_PARAM_RANGES.delayTime.min}
-          max={EFFECT_PARAM_RANGES.delayTime.max}
-          step={0.01}
-          label="TIME"
-          unit="ms"
-          onChange={onDelayTimeChange}
-          disabled={!enabled}
-        />
-        <Knob
-          value={feedback}
-          min={EFFECT_PARAM_RANGES.feedback.min}
-          max={EFFECT_PARAM_RANGES.feedback.max}
-          step={0.01}
-          label="FB"
-          unit="%"
-          onChange={onFeedbackChange}
-          disabled={!enabled}
-        />
-        <Knob
-          value={wet}
-          min={EFFECT_PARAM_RANGES.wet.min}
-          max={EFFECT_PARAM_RANGES.wet.max}
-          step={0.01}
-          label="MIX"
-          unit="%"
-          onChange={onWetChange}
-          disabled={!enabled}
-        />
-      </div>
+    <div className="effectKnobs">
+      <Knob
+        value={delayTime}
+        min={EFFECT_PARAM_RANGES.delayTime.min}
+        max={EFFECT_PARAM_RANGES.delayTime.max}
+        step={0.01}
+        label="TIME"
+        unit="ms"
+        onChange={onDelayTimeChange}
+        disabled={!enabled}
+      />
+      <Knob
+        value={feedback}
+        min={EFFECT_PARAM_RANGES.feedback.min}
+        max={EFFECT_PARAM_RANGES.feedback.max}
+        step={0.01}
+        label="FB"
+        unit="%"
+        onChange={onFeedbackChange}
+        disabled={!enabled}
+      />
+      <Knob
+        value={wet}
+        min={EFFECT_PARAM_RANGES.wet.min}
+        max={EFFECT_PARAM_RANGES.wet.max}
+        step={0.01}
+        label="MIX"
+        unit="%"
+        onChange={onWetChange}
+        disabled={!enabled}
+      />
     </div>
   );
 }

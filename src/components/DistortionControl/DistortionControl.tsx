@@ -19,29 +19,27 @@ function DistortionControl({
   enabled,
 }: DistortionControlProps) {
   return (
-    <div className="effectControl">
-      <div className="effectKnobs">
-        <Knob
-          value={distortion}
-          min={EFFECT_PARAM_RANGES.distortion.min}
-          max={EFFECT_PARAM_RANGES.distortion.max}
-          step={0.01}
-          label="DRIVE"
-          unit=""
-          onChange={onDistortionChange}
-          disabled={!enabled}
-        />
-        <Knob
-          value={wet}
-          min={EFFECT_PARAM_RANGES.wet.min}
-          max={EFFECT_PARAM_RANGES.wet.max}
-          step={0.01}
-          label="MIX"
-          unit="%"
-          onChange={onWetChange}
-          disabled={!enabled}
-        />
-      </div>
+    <div className="effectKnobs">
+      <Knob
+        value={distortion}
+        min={EFFECT_PARAM_RANGES.distortion.min}
+        max={EFFECT_PARAM_RANGES.distortion.max}
+        step={0.01}
+        label="DRIVE"
+        unit=""
+        onChange={onDistortionChange}
+        disabled={!enabled}
+      />
+      <Knob
+        value={wet}
+        min={EFFECT_PARAM_RANGES.wet.min}
+        max={EFFECT_PARAM_RANGES.wet.max}
+        step={0.01}
+        label="MIX"
+        unit="%"
+        onChange={onWetChange}
+        disabled={!enabled}
+      />
     </div>
   );
 }

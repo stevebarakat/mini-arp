@@ -2,7 +2,6 @@
   background-color: hsl(220, 13%, 18%);
   padding: 1rem;
   border-radius: 8px;
-  width: 100%;
   max-height: fit-content;
 }
 
@@ -20,28 +19,60 @@
   font-weight: 500;
 }
 
-.ledIndicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: hsl(220, 13%, 30%);
-  transition: all 0.2s ease;
-  cursor: pointer;
+.toggleSwitch {
   position: relative;
+  display: none;
+  width: 32px;
+  height: 12px;
+  margin-left: 4px;
+  margin-bottom: 2px;
+  transition: opacity 0.2s ease;
 }
 
-.ledIndicator:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+[data-state="active"] .toggleSwitch {
+  display: inline-block;
 }
 
-.ledIndicator.active {
-  background-color: hsl(120, 70%, 50%);
-  box-shadow: 0 0 8px hsl(120, 70%, 50%);
+.toggleSwitch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggleSlider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: hsl(220, 13%, 30%);
+  transition: 0.2s;
+  border-radius: 16px;
+}
+
+.toggleSlider:before {
+  position: absolute;
+  content: "";
+  height: 12px;
+  width: 12px;
+  left: 2px;
+  /* bottom: 2px; */
+  background-color: hsl(220, 13%, 90%);
+  transition: 0.2s;
+  border-radius: 50%;
+}
+
+input:checked + .toggleSlider {
+  background-color: hsl(220, 70%, 55%);
+}
+
+input:checked + .toggleSlider:before {
+  transform: translateX(16px);
 }
 
 .effectKnobs {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   justify-content: space-between;
 }
