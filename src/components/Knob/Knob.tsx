@@ -11,7 +11,7 @@ interface KnobProps {
   disabled?: boolean;
 }
 
-export function Knob({
+function Knob({
   value,
   min,
   max,
@@ -85,3 +85,5 @@ export function Knob({
     </div>
   );
 }
+
+export default Knob;

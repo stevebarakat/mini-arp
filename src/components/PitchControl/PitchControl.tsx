@@ -1,5 +1,5 @@
 import { MIN_PITCH_SHIFT, MAX_PITCH_SHIFT } from "../../constants";
-import { Knob } from "../Knob";
+import Knob from "../Knob";
 import styles from "./styles.module.css";
 
 type PitchControlProps = {

@@ -1,5 +1,5 @@
 import { MIN_TEMPO, MAX_TEMPO } from "../../constants";
-import { Knob } from "../Knob";
+import Knob from "../Knob";
 import styles from "./styles.module.css";
 
 type TempoControlProps = {

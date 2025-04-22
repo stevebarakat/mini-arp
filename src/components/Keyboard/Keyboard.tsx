@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useImperativeHandle } from "react";
 import * as Tone from "tone";
 import { INSTRUMENT_TYPES } from "../../constants";
-import { EnvelopeControl } from "../EnvelopeControl";
+import EnvelopeControl from "../EnvelopeControl";
 import EnvelopeVisualizer from "../EnvelopeVisualizer/EnvelopeVisualizer";
 import "./keyboard.css";
 

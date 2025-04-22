@@ -1,6 +1,6 @@
 import React from "react";
 import { FILTER_PARAM_RANGES } from "../../constants";
-import { Knob } from "../Knob";
+import Knob from "../Knob";
 import styles from "./styles.module.css";
 
 type FilterControlProps = {

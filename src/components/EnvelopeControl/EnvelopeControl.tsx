@@ -1,4 +1,4 @@
-import { Knob } from "../Knob";
+import Knob from "../Knob";
 import styles from "./styles.module.css";
 
 // Update curve types to match Tone.js's BasicEnvelopeCurve

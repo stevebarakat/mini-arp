@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { SequencerGrid } from "./components/SequencerGrid";
-import { TempoControl } from "./components/TempoControl";
-import { PitchControl } from "./components/PitchControl";
-import { FilterControl } from "./components/FilterControl";
-import { DelayControl } from "./components/DelayControl";
-import { ReverbControl } from "./components/ReverbControl";
-import { DistortionControl } from "./components/DistortionControl";
+import SequencerGrid from "./components/SequencerGrid";
+import TempoControl from "./components/TempoControl";
+import PitchControl from "./components/PitchControl";
+import FilterControl from "./components/FilterControl";
+import DelayControl from "./components/DelayControl";
+import ReverbControl from "./components/ReverbControl";
+import DistortionControl from "./components/DistortionControl";
 import { useMachine } from "@xstate/react";
 import { sequencerMachine } from "./machines/sequencerMachine";
 import { effectsMachine } from "./machines/effectsMachine";
