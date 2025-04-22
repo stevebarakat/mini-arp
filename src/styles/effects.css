@@ -19,6 +19,20 @@
   font-weight: 500;
 }
 
+.ledIndicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: hsl(220, 13%, 30%);
+  transition: background-color 0.2s ease;
+  margin-left: 4px;
+  margin-bottom: 2px;
+}
+
+.ledIndicator.active {
+  background-color: hsl(220, 70%, 55%);
+}
+
 .toggleSwitch {
   position: relative;
   display: none;
@@ -31,6 +45,10 @@
 
 [data-state="active"] .toggleSwitch {
   display: inline-block;
+}
+
+[data-state="active"] .ledIndicator {
+  display: none;
 }
 
 .toggleSwitch input {
@@ -57,7 +75,6 @@
   height: 12px;
   width: 12px;
   left: 2px;
-  /* bottom: 2px; */
   background-color: hsl(220, 13%, 90%);
   transition: 0.2s;
   border-radius: 50%;

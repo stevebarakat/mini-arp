@@ -10,7 +10,6 @@ type DriveControlProps = {
   onToneChange: (tone: number) => void;
   onLevelChange: (level: number) => void;
   enabled: boolean;
-  onToggle: (enabled: boolean) => void;
 };
 
 function DriveControl({
@@ -21,51 +20,39 @@ function DriveControl({
   onToneChange,
   onLevelChange,
   enabled,
-  onToggle,
 }: DriveControlProps) {
   return (
-    <div className="effectControl">
-      <label className="toggleSwitch">
-        <input
-          type="checkbox"
-          checked={enabled}
-          onChange={(e) => onToggle(e.target.checked)}
-        />
-        <span className="toggleSlider"></span>
-      </label>
-
-      <div className="effectKnobs">
-        <Knob
-          value={drive}
-          min={EFFECT_PARAM_RANGES.distortion.min}
-          max={EFFECT_PARAM_RANGES.distortion.max}
-          step={0.01}
-          label="DRIVE"
-          unit="%"
-          onChange={onDriveChange}
-          disabled={!enabled}
-        />
-        <Knob
-          value={tone}
-          min={0}
-          max={100}
-          step={0.01}
-          label="TONE"
-          unit="%"
-          onChange={onToneChange}
-          disabled={!enabled}
-        />
-        <Knob
-          value={level}
-          min={0}
-          max={100}
-          step={0.01}
-          label="LEVEL"
-          unit="%"
-          onChange={onLevelChange}
-          disabled={!enabled}
-        />
-      </div>
+    <div className="effectKnobs">
+      <Knob
+        value={drive}
+        min={EFFECT_PARAM_RANGES.distortion.min}
+        max={EFFECT_PARAM_RANGES.distortion.max}
+        step={0.01}
+        label="DRIVE"
+        unit="%"
+        onChange={onDriveChange}
+        disabled={!enabled}
+      />
+      <Knob
+        value={tone}
+        min={0}
+        max={100}
+        step={0.01}
+        label="TONE"
+        unit="%"
+        onChange={onToneChange}
+        disabled={!enabled}
+      />
+      <Knob
+        value={level}
+        min={0}
+        max={100}
+        step={0.01}
+        label="LEVEL"
+        unit="%"
+        onChange={onLevelChange}
+        disabled={!enabled}
+      />
     </div>
   );
 }

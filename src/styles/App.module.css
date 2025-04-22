@@ -22,6 +22,11 @@
   max-width: 830px;
 }
 
+.sequencerControls {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .controlsContainer {
   display: flex;
   gap: 0.5rem;
@@ -30,30 +35,6 @@
   border-radius: var(--border-radius);
   border: 1px solid hsl(0, 0%, 27%);
   margin-bottom: 0.25rem;
-}
-
-.controlGroup {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  height: fit-content;
-}
-
-.effectsPanel {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background: var(--synth-bg);
-  border-radius: var(--border-radius);
-  border: 1px solid hsl(0, 0%, 27%);
-  margin-bottom: 0.5rem;
-}
-
-@media (max-width: 1600px) {
-  .effectsPanel {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 1200px) {

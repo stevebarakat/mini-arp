@@ -81,11 +81,16 @@ function EffectsTabs({
   onToggleDistortion: (enabled: boolean) => void;
 }) {
   return (
-    <div className="effectControl">
+    <>
       <Tabs.Root defaultValue="filter">
         <Tabs.List className={styles.tabsList}>
           <Tabs.Trigger className={styles.tabsTrigger} value="filter">
             Filter{" "}
+            <div
+              className={`ledIndicator ${
+                isEffectActive("autoFilter") ? "active" : ""
+              }`}
+            ></div>
             <label className="toggleSwitch">
               <input
                 type="checkbox"
@@ -97,6 +102,11 @@ function EffectsTabs({
           </Tabs.Trigger>
           <Tabs.Trigger className={styles.tabsTrigger} value="delay">
             Delay{" "}
+            <div
+              className={`ledIndicator ${
+                isEffectActive("delay") ? "active" : ""
+              }`}
+            ></div>
             <label className="toggleSwitch">
               <input
                 type="checkbox"
@@ -108,6 +118,11 @@ function EffectsTabs({
           </Tabs.Trigger>
           <Tabs.Trigger className={styles.tabsTrigger} value="reverb">
             Reverb{" "}
+            <div
+              className={`ledIndicator ${
+                isEffectActive("reverb") ? "active" : ""
+              }`}
+            ></div>
             <label className="toggleSwitch">
               <input
                 type="checkbox"
@@ -119,6 +134,11 @@ function EffectsTabs({
           </Tabs.Trigger>
           <Tabs.Trigger className={styles.tabsTrigger} value="distortion">
             Drive{" "}
+            <div
+              className={`ledIndicator ${
+                isEffectActive("distortion") ? "active" : ""
+              }`}
+            ></div>
             <label className="toggleSwitch">
               <input
                 type="checkbox"
@@ -178,7 +198,7 @@ function EffectsTabs({
           />
         </Tabs.Content>
       </Tabs.Root>
-    </div>
+    </>
   );
 }
 
@@ -403,11 +423,7 @@ function App() {
             onToggleStep={toggleHiHat}
             onToggleCell={toggleCell}
           />
-          <div className={styles.controlGroup}>
-            <div className="effectControl">
-              <TempoControl tempo={tempo} onTempoChange={updateTempo} />
-              <PitchControl pitch={pitch} onPitchChange={updatePitch} />
-            </div>
+          <div>
             <EffectsTabs
               filterFrequency={filterFrequency}
               filterDepth={filterDepth}
@@ -439,6 +455,10 @@ function App() {
               onToggleReverb={toggleReverb}
               onToggleDistortion={toggleDistortion}
             />
+            <div className={styles.sequencerControls}>
+              <TempoControl tempo={tempo} onTempoChange={updateTempo} />
+              <PitchControl pitch={pitch} onPitchChange={updatePitch} />
+            </div>
           </div>
         </div>
         <Keyboard activeKeys={activeKeys} onKeyClick={handleKeyClick} />

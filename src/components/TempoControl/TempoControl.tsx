@@ -1,5 +1,5 @@
 import { MIN_TEMPO, MAX_TEMPO } from "../../constants";
-import Knob from "../Knob";
+import * as Slider from "@radix-ui/react-slider";
 import styles from "./styles.module.css";
 
 type TempoControlProps = {
@@ -9,16 +9,22 @@ type TempoControlProps = {
 
 function TempoControl({ tempo, onTempoChange }: TempoControlProps) {
   return (
-    <div className={styles.moduleKnobs}>
-      <Knob
-        value={tempo}
+    <div className={styles.sliderContainer}>
+      <label className={styles.label}>Tempo (bpm)</label>
+      <Slider.Root
+        className={styles.sliderRoot}
+        value={[tempo]}
         min={MIN_TEMPO}
         max={MAX_TEMPO}
         step={1}
-        label="Tempo"
-        unit="bpm"
-        onChange={onTempoChange}
-      />
+        onValueChange={([value]) => onTempoChange(value)}
+      >
+        <Slider.Track className={styles.sliderTrack}>
+          <Slider.Range className={styles.sliderRange} />
+        </Slider.Track>
+        <Slider.Thumb className={styles.sliderThumb} />
+      </Slider.Root>
+      <span className={styles.value}>{tempo}</span>
     </div>
   );
 }

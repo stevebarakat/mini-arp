@@ -1,5 +1,6 @@
 import { MIN_PITCH_SHIFT, MAX_PITCH_SHIFT } from "../../constants";
-import Knob from "../Knob";
+import * as Slider from "@radix-ui/react-slider";
+import styles from "./styles.module.css";
 
 type PitchControlProps = {
   pitch: number;
@@ -7,19 +8,24 @@ type PitchControlProps = {
 };
 
 function PitchControl({ pitch, onPitchChange }: PitchControlProps) {
-  const handleChange = (value: number) => {
-    onPitchChange(value);
-  };
-
   return (
-    <Knob
-      value={pitch}
-      min={MIN_PITCH_SHIFT}
-      max={MAX_PITCH_SHIFT}
-      onChange={handleChange}
-      label="Pitch"
-      unit="st"
-    />
+    <div className={styles.sliderContainer}>
+      <label className={styles.label}>Pitch (st)</label>
+      <Slider.Root
+        className={styles.sliderRoot}
+        value={[pitch]}
+        min={MIN_PITCH_SHIFT}
+        max={MAX_PITCH_SHIFT}
+        step={1}
+        onValueChange={([value]) => onPitchChange(value)}
+      >
+        <Slider.Track className={styles.sliderTrack}>
+          <Slider.Range className={styles.sliderRange} />
+        </Slider.Track>
+        <Slider.Thumb className={styles.sliderThumb} />
+      </Slider.Root>
+      <span className={styles.value}>{pitch}</span>
+    </div>
   );
 }
 
