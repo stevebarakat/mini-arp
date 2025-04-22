@@ -13,7 +13,7 @@ type DelayControlProps = {
   onToggle: (enabled: boolean) => void;
 };
 
-export function DelayControl({
+export default function DelayControl({
   delayTime,
   feedback,
   wet,

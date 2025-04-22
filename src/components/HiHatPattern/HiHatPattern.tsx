@@ -1,4 +1,3 @@
-import React from "react";
 import styles from "./styles.module.css";
 
 type HiHatPatternProps = {
@@ -8,7 +7,7 @@ type HiHatPatternProps = {
   isPlaying: boolean;
 };
 
-export function HiHatPattern({
+export default function HiHatPattern({
   pattern,
   currentStep,
   onToggleStep,

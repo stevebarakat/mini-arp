@@ -12,7 +12,7 @@ type DriveControlProps = {
   onToggle: (enabled: boolean) => void;
 };
 
-export function DriveControl({
+export default function DriveControl({
   drive,
   tone,
   level,

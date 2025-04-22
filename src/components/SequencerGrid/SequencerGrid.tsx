@@ -9,7 +9,7 @@ type SequencerGridProps = {
   onToggleCell: (rowIndex: number, colIndex: number) => void;
 };
 
-export function SequencerGrid({
+function SequencerGrid({
   grid,
   currentStep,
   pattern,
@@ -61,3 +61,5 @@ export function SequencerGrid({
     </div>
   );
 }
+
+export default SequencerGrid;

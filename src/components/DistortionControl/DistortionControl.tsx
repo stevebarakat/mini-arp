@@ -11,7 +11,7 @@ type DistortionControlProps = {
   onToggle: (enabled: boolean) => void;
 };
 
-export function DistortionControl({
+export default function DistortionControl({
   distortion,
   wet,
   onDistortionChange,

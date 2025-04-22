@@ -7,7 +7,7 @@ type PitchControlProps = {
   onPitchChange: (shift: number) => void;
 };
 
-export function PitchControl({ pitch, onPitchChange }: PitchControlProps) {
+function PitchControl({ pitch, onPitchChange }: PitchControlProps) {
   const handleChange = (value: number) => {
     onPitchChange(value);
   };
@@ -25,3 +25,5 @@ export function PitchControl({ pitch, onPitchChange }: PitchControlProps) {
     </div>
   );
 }
+
+export default PitchControl;

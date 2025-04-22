@@ -7,7 +7,7 @@ type TempoControlProps = {
   onTempoChange: (tempo: number) => void;
 };
 
-export function TempoControl({ tempo, onTempoChange }: TempoControlProps) {
+function TempoControl({ tempo, onTempoChange }: TempoControlProps) {
   return (
     <div className={styles.controlModule}>
       <div className={styles.moduleKnobs}>
@@ -23,3 +23,5 @@ export function TempoControl({ tempo, onTempoChange }: TempoControlProps) {
     </div>
   );
 }
+
+export default TempoControl;

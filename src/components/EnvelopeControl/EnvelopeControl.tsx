@@ -1,4 +1,3 @@
-import React from "react";
 import { Knob } from "../Knob";
 import styles from "./styles.module.css";
 
@@ -24,7 +23,7 @@ interface EnvelopeControlProps {
   onReleaseCurveChange: (value: CurveType) => void;
 }
 
-export function EnvelopeControl({
+export default function EnvelopeControl({
   attack,
   decay,
   sustain,

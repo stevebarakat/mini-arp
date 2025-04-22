@@ -16,7 +16,7 @@ type FilterControlProps = {
   onToggle: (enabled: boolean) => void;
 };
 
-export function FilterControl({
+export default function FilterControl({
   frequency,
   depth,
   wet,

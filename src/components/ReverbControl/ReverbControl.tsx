@@ -1,4 +1,3 @@
-import React from "react";
 import { EFFECT_PARAM_RANGES } from "../../constants";
 import { Knob } from "../Knob";
 import styles from "./styles.module.css";
@@ -14,7 +13,7 @@ type ReverbControlProps = {
   onToggle: (enabled: boolean) => void;
 };
 
-export function ReverbControl({
+function ReverbControl({
   decay,
   preDelay,
   wet,
@@ -76,3 +75,5 @@ export function ReverbControl({
     </div>
   );
 }
+
+export default ReverbControl;
