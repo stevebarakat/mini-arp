@@ -35,6 +35,7 @@
   border-radius: var(--border-radius);
   border: 1px solid hsl(0, 0%, 27%);
   margin-bottom: 0.25rem;
+  justify-content: space-between;
 }
 
 @media (max-width: 1200px) {
