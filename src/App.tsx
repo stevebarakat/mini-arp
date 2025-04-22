@@ -12,7 +12,7 @@ import { effectsMachine } from "./machines/effectsMachine";
 import * as Tone from "tone";
 import { EffectType } from "./machines/effectsMachine";
 import Keyboard from "./components/Keyboard";
-import "./styles/global.css";
+import styles from "./styles/App.module.css";
 
 // Define the state values type for type safety
 type SequencerStateValue = "playing" | "stopped";
@@ -229,14 +229,14 @@ function App() {
   };
 
   return (
-    <div className="container">
-      <div className="sequencer">
-        <div className="controls-container">
-          <div className="control-group">
+    <div className={styles.container}>
+      <div className={styles.sequencer}>
+        <div className={styles.controlsContainer}>
+          <div className={styles.controlGroup}>
             <BpmControl tempo={tempo} onTempoChange={updateTempo} />
             <PitchControl pitch={pitch} onPitchChange={updatePitch} />
           </div>
-          <div className="visualizer-container">
+          <div className={styles.visualizerContainer}>
             {/* Add your visualizer component here */}
           </div>
         </div>
@@ -252,7 +252,7 @@ function App() {
         <Keyboard activeKeys={activeKeys} onKeyClick={handleKeyClick} />
 
         <h2>Effects</h2>
-        <div className="effects-panel">
+        <div className={styles.effectsPanel}>
           <FilterControl
             frequency={filterFrequency}
             depth={filterDepth}
