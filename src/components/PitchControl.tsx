@@ -1,4 +1,4 @@
-import { MIN_PITCH_SHIFT, MAX_PITCH_SHIFT } from "../constants/sequencer";
+import { MIN_PITCH_SHIFT, MAX_PITCH_SHIFT } from "../constants";
 
 type PitchControlProps = {
   pitch: number;

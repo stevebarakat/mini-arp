@@ -245,11 +245,7 @@ function App() {
           onToggleCell={toggleCell}
         />
 
-        <Keyboard
-          activeKeys={activeKeys}
-          octaveRange={{ min: 3, max: 9 }}
-          onKeyClick={handleKeyClick}
-        />
+        <Keyboard activeKeys={activeKeys} onKeyClick={handleKeyClick} />
 
         <h2>Effects</h2>
         <div className="effects-panel">

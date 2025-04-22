@@ -1,0 +1,23 @@
+{
+  "styling": {
+    "colors": "hsl",
+    "cssFramework": "css-modules"
+  },
+  "codeGeneration": {
+    "avoidPackages": ["tailwindcss"],
+    "preferredPackages": ["xstate", "zod", "react-router-dom"]
+  },
+  "documentation": {
+    "includeComments": false
+  },
+  "typescript": {
+    "preferTypes": true,
+    "preferFunctionDeclarations": true
+  },
+  "react": {
+    "preferComponentProps": true
+  },
+  "ui": {
+    "iconLibrary": "lucide"
+  }
+}

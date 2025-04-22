@@ -140,3 +140,7 @@ export const FILTER_PARAM_RANGES = {
 
 // Bus name for effects routing
 export const EFFECTS_BUS = "effects";
+
+export const INSTRUMENT_TYPES = {
+  SYNTH: "synth",
+} as const;

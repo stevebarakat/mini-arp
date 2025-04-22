@@ -6,7 +6,7 @@ import {
   DELAY_CONFIG,
   REVERB_CONFIG,
   DISTORTION_CONFIG,
-} from "../constants/sequencer";
+} from "../constants";
 
 // Define the types of effects we support
 export type EffectType = "autoFilter" | "delay" | "reverb" | "distortion";

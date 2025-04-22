@@ -1,4 +1,4 @@
-import { MIN_TEMPO, MAX_TEMPO } from "../constants/sequencer";
+import { MIN_TEMPO, MAX_TEMPO } from "../constants";
 import { Knob } from "./Knob";
 
 type TempoControlProps = {

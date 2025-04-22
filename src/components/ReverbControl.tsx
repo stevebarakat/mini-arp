@@ -1,5 +1,5 @@
 import React from "react";
-import { EFFECT_PARAM_RANGES } from "../constants/sequencer";
+import { EFFECT_PARAM_RANGES } from "../constants";
 import { Knob } from "./Knob";
 
 type ReverbControlProps = {

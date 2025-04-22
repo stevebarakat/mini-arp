@@ -4,10 +4,10 @@ import {
   NOTES,
   transposeNote,
   SYNTH_CONFIG,
-} from "../constants/sequencer";
+} from "../constants";
 import { setup, assign, fromCallback, enqueueActions } from "xstate";
 import * as Tone from "tone";
-import { DEFAULT_TEMPO } from "../constants/sequencer";
+import { DEFAULT_TEMPO } from "../constants";
 import { connectToEffects, EffectsContext } from "./effectsMachine";
 
 export type Grid = boolean[][];
