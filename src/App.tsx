@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import SequencerGrid from "./components/SequencerGrid";
-import TempoControl from "./components/TempoControl";
+import BpmControl from "./components/BpmControl";
 import PitchControl from "./components/PitchControl";
 import FilterControl from "./components/FilterControl";
 import DelayControl from "./components/DelayControl";
@@ -231,11 +231,9 @@ function App() {
   return (
     <div className="container">
       <div className="sequencer">
-        <h1>Tone.js Arpeggiator</h1>
-
         <div className="controls-container">
           <div className="control-group">
-            <TempoControl tempo={tempo} onTempoChange={updateTempo} />
+            <BpmControl tempo={tempo} onTempoChange={updateTempo} />
             <PitchControl pitch={pitch} onPitchChange={updatePitch} />
           </div>
           <div className="visualizer-container">

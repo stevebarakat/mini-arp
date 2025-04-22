@@ -1,0 +1,46 @@
+.knobContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.knob {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: hsl(220, 13%, 18%);
+  border: 2px solid hsl(220, 13%, 25%);
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.knob::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 20px;
+  background: hsl(220, 13%, 90%);
+  transform: translate(-50%, -100%);
+  transform-origin: bottom center;
+}
+
+.knob.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.knobLabel {
+  font-size: 0.875rem;
+  color: hsl(220, 13%, 70%);
+  text-align: center;
+}
+
+.knobValue {
+  font-size: 1rem;
+  font-weight: 500;
+  color: hsl(220, 13%, 90%);
+}

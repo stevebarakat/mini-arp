@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import styles from "./Knob.module.css";
 
 interface KnobProps {
   value: number;
@@ -27,25 +28,25 @@ function Knob({
   const [startValue, setStartValue] = useState(0);
 
   // Convert value to rotation degrees (0-300 degrees)
-  const getRotation = (val: number) => {
+  function getRotation(val: number) {
     const range = max - min;
     const percentage = (val - min) / range;
     return percentage * 300 - 150; // -150 to +150 degrees
-  };
+  }
 
   const rotation = getRotation(value);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  function handleMouseDown(e: React.MouseEvent) {
     if (disabled) return;
     setIsDragging(true);
     setStartY(e.clientY);
     setStartValue(value);
-  };
+  }
 
   useEffect(() => {
     if (!isDragging) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    function handleMouseMove(e: MouseEvent) {
       const sensitivity = 0.5;
       const deltaY = (startY - e.clientY) * sensitivity;
       const range = max - min;
@@ -54,11 +55,11 @@ function Knob({
         Math.max(min, startValue + (deltaY / 100) * range)
       );
       onChange(Number(newValue.toFixed(2)));
-    };
+    }
 
-    const handleMouseUp = () => {
+    function handleMouseUp() {
       setIsDragging(false);
-    };
+    }
 
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
@@ -70,15 +71,15 @@ function Knob({
   }, [isDragging, min, max, startY, startValue, onChange]);
 
   return (
-    <div className="knob-container">
+    <div className={styles.knobContainer}>
       <div
         ref={knobRef}
-        className={`knob ${disabled ? "disabled" : ""}`}
-        style={{ "--rotation": `${rotation}deg` } as React.CSSProperties}
+        className={`${styles.knob} ${disabled ? styles.disabled : ""}`}
+        style={{ transform: `rotate(${rotation}deg)` }}
         onMouseDown={handleMouseDown}
       />
-      <div className="knob-label">{label}</div>
-      <div className="knob-value">
+      <div className={styles.knobLabel}>{label}</div>
+      <div className={styles.knobValue}>
         {value.toFixed(step >= 1 ? 0 : 2)}
         {unit}
       </div>
