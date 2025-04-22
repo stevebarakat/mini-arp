@@ -84,7 +84,6 @@ const Keyboard = ({
       if (isStickyKeys) {
         if (stickyNote === note) {
           // If clicking the same note, release it
-          instrument.triggerRelease([note]);
           setStickyNote(null);
           setActiveNotes((prev) => {
             const next = new Set(prev);
@@ -95,7 +94,6 @@ const Keyboard = ({
         } else {
           // If clicking a different note, switch to it
           if (stickyNote) {
-            instrument.triggerRelease([stickyNote]);
             setActiveNotes((prev) => {
               const next = new Set(prev);
               next.delete(stickyNote);
@@ -109,18 +107,12 @@ const Keyboard = ({
               return next;
             });
           }
-          instrument.triggerAttack([note]);
           setStickyNote(note);
           onKeyClick(note);
         }
       } else {
-        // In non-sticky mode, just trigger the attack
-        instrument.triggerAttack([note]);
-        setActiveNotes((prev) => {
-          const next = new Set(prev);
-          next.add(note);
-          return next;
-        });
+        // In non-sticky mode, just trigger the callback and set active note
+        setActiveNotes(new Set([note]));
         onKeyClick(note);
       }
     } catch (e) {
@@ -130,17 +122,12 @@ const Keyboard = ({
 
   // Handle key release
   const handleKeyRelease = (note: string) => {
-    if (!instrument || !isLoaded || isStickyKeys) return;
+    if (!instrument || !isLoaded) return;
 
     try {
-      // Only release if this note is actually active
-      if (activeNotes.has(note)) {
-        instrument.triggerRelease([note]);
-        setActiveNotes((prev) => {
-          const next = new Set(prev);
-          next.delete(note);
-          return next;
-        });
+      // Only release if this note is actually active and we're not in sticky mode
+      if (activeNotes.has(note) && !isStickyKeys) {
+        setActiveNotes(new Set());
         onKeyClick("");
       }
     } catch (e) {

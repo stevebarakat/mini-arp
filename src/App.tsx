@@ -405,9 +405,10 @@ function App() {
         togglePlayback();
       }
     } else {
-      setActiveKeys([]); // Clear active keys on release
+      // When note is empty string (key release), clear active keys and stop sequencer
+      setActiveKeys([]);
       if (sequencerState.matches("playing")) {
-        togglePlayback(); // Stop the sequencer when key is released
+        sequencerSend({ type: "STOP" });
       }
     }
   };
