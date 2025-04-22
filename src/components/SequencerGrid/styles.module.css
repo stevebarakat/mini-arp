@@ -2,8 +2,8 @@
   background-color: hsl(220, 13%, 18%);
   padding: 1.5rem;
   border-radius: 8px;
-  width: 100%;
-  max-width: 600px;
+  width: fit-content;
+  height: fit-content;
 }
 
 .gridContainer {

@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useImperativeHandle } from "react";
 import * as Tone from "tone";
 import { INSTRUMENT_TYPES } from "../../constants";
-import EnvelopeControl from "../EnvelopeControl";
-import EnvelopeVisualizer from "../EnvelopeVisualizer/EnvelopeVisualizer";
 import "./keyboard.css";
 
 interface SharedKeyboardProps {
@@ -229,7 +227,19 @@ const Keyboard = ({
         currentInstrument.dispose();
       }
     };
-  }, [instrumentType, currentInstrumentType]);
+  }, [
+    instrumentType,
+    currentInstrumentType,
+    instrument,
+    attack,
+    decay,
+    sustain,
+    release,
+    attackCurve,
+    decayCurve,
+    releaseCurve,
+    activeNotes,
+  ]);
 
   // Update synth parameters when envelope controls change
   useEffect(() => {
@@ -352,31 +362,6 @@ const Keyboard = ({
 
   return (
     <div className="keyboard-container">
-      <EnvelopeControl
-        attack={attack}
-        decay={decay}
-        sustain={sustain}
-        release={release}
-        attackCurve={attackCurve}
-        decayCurve={decayCurve}
-        releaseCurve={releaseCurve}
-        onAttackChange={setAttack}
-        onDecayChange={setDecay}
-        onSustainChange={setSustain}
-        onReleaseChange={setRelease}
-        onAttackCurveChange={setAttackCurve}
-        onDecayCurveChange={setDecayCurve}
-        onReleaseCurveChange={setReleaseCurve}
-      />
-      <EnvelopeVisualizer
-        attack={attack}
-        decay={decay}
-        sustain={sustain}
-        release={release}
-        attackCurve={attackCurve}
-        decayCurve={decayCurve}
-        releaseCurve={releaseCurve}
-      />
       <button
         className={`button ${isStickyKeys ? "active" : ""}`}
         onClick={toggleStickyKeys}

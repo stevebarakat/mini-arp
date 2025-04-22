@@ -37,10 +37,11 @@
   font-size: 0.875rem;
   color: hsl(220, 13%, 70%);
   text-align: center;
+  user-select: none;
 }
 
 .knobValue {
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 0.875rem;
   color: hsl(220, 13%, 90%);
+  user-select: none;
 }

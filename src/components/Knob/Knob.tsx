@@ -72,17 +72,19 @@ function Knob({
 
   return (
     <div className={styles.knobContainer}>
+      {isDragging ? (
+        <div className={styles.knobValue}>
+          {value.toFixed(step >= 1 ? 0 : 2)}&nbsp;{unit}
+        </div>
+      ) : (
+        <div className={styles.knobLabel}>{label}</div>
+      )}
       <div
         ref={knobRef}
         className={`${styles.knob} ${disabled ? styles.disabled : ""}`}
         style={{ transform: `rotate(${rotation}deg)` }}
         onMouseDown={handleMouseDown}
       />
-      <div className={styles.knobLabel}>{label}</div>
-      <div className={styles.knobValue}>
-        {value.toFixed(step >= 1 ? 0 : 2)}
-        {unit}
-      </div>
     </div>
   );
 }

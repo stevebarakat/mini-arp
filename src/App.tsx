@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import SequencerGrid from "./components/SequencerGrid";
-import BpmControl from "./components/BpmControl";
+import TempoControl from "./components/TempoControl";
 import PitchControl from "./components/PitchControl";
 import FilterControl from "./components/FilterControl";
 import DelayControl from "./components/DelayControl";
@@ -232,22 +232,18 @@ function App() {
     <div className={styles.container}>
       <div className={styles.sequencer}>
         <div className={styles.controlsContainer}>
+          <SequencerGrid
+            grid={grid}
+            currentStep={currentStep % 8}
+            pattern={hiHatPattern}
+            onToggleStep={toggleHiHat}
+            onToggleCell={toggleCell}
+          />
           <div className={styles.controlGroup}>
-            <BpmControl tempo={tempo} onTempoChange={updateTempo} />
+            <TempoControl tempo={tempo} onTempoChange={updateTempo} />
             <PitchControl pitch={pitch} onPitchChange={updatePitch} />
           </div>
-          <div className={styles.visualizerContainer}>
-            {/* Add your visualizer component here */}
-          </div>
         </div>
-
-        <SequencerGrid
-          grid={grid}
-          currentStep={currentStep % 8}
-          pattern={hiHatPattern}
-          onToggleStep={toggleHiHat}
-          onToggleCell={toggleCell}
-        />
 
         <Keyboard activeKeys={activeKeys} onKeyClick={handleKeyClick} />
 
