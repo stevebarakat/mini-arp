@@ -1,0 +1,197 @@
+.keyboardContainer {
+  margin-bottom: var(--spacing-md);
+  width: 100%;
+}
+
+.keyboard {
+  padding: 0 3px 4px;
+  background: var(--color-off-black);
+  box-shadow: 0 4px 6px -1px hsl(217deg 30% 25%),
+    0 4px 6px -1px hsl(217deg 50% 10%);
+
+  &::before {
+    position: relative;
+    left: -175px;
+    z-index: 50;
+    display: flex;
+    width: calc(100% + 300px);
+    height: 12px;
+    background: linear-gradient(
+      180deg,
+      hsl(217deg 50% 20%),
+      hsl(217deg 10% 5%)
+    );
+    box-shadow: 0 5px 10px 0 hsl(0deg 0% 0% / 50%);
+    content: "";
+  }
+}
+
+.pianoKeys {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  height: 100%;
+}
+
+.leftShadow {
+  position: absolute;
+  z-index: 10;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(
+    270deg,
+    hsl(0deg 0% 100% / 0%) 0%,
+    hsl(0deg 0% 50% / 50%) 50%,
+    hsl(0deg 0% 0% / 100%) 100%
+  );
+  pointer-events: none;
+  filter: blur(9px);
+}
+
+.rightShadow {
+  position: absolute;
+  right: 0;
+  z-index: 10;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    hsl(0deg 0% 100% / 0%) 0%,
+    hsl(0deg 0% 50% / 50%) 50%,
+    hsl(0deg 0% 0% / 100%) 100%
+  );
+  pointer-events: none;
+  filter: blur(9px);
+}
+
+.whiteKey {
+  flex: 1;
+  height: 170px;
+  background: linear-gradient(180deg, hsl(0deg 0% 100%), hsl(0deg 0% 80%));
+  border-bottom: 3px solid hsl(0deg 0% 35%);
+  border-radius: 0 0 5px 5px;
+  box-shadow: inset 0 0.5px 0.5px 1px hsl(0deg 0% 0% / 40%),
+    inset 0 0 0.5px 1.5px hsl(0deg 0% 90% / 50%),
+    inset 0 0 0.5px 2.5px hsl(0deg 0% 90% / 50%);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &::before {
+    z-index: 1000;
+    content: "";
+    display: block;
+    height: 60px;
+    background: linear-gradient(
+      0deg,
+      hsl(0deg 0% 80% / 0%) 0%,
+      hsl(0deg 0% 50% / 37.5%) 50%,
+      hsl(0deg 0% 20% / 85%) 100%
+    );
+  }
+}
+
+.whiteKeyActive {
+  background: linear-gradient(
+    to bottom,
+    #fff 0%,
+    #f8f8f8 75%,
+    #f0f0f0 85%,
+    #e8e8e8 90%,
+    #ddd 95%
+  );
+  border-bottom: 2px solid hsl(0deg 0% 35%);
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 10%), inset 0 1px 1px hsl(217deg 70% 90%);
+  transform: translateY(2px);
+}
+
+.blackKey {
+  position: absolute;
+  z-index: 20;
+  height: 100px;
+  background: linear-gradient(
+    to bottom,
+    hsl(217deg 13% 15%),
+    hsl(217deg 13% 10%)
+  );
+  border-radius: 0 0 5px 5px;
+  box-shadow: 0 4px 6px hsl(0deg 0% 0% / 30%),
+    inset 0 1px 1px hsl(217deg 13% 18%);
+  cursor: pointer;
+  transform: translateY(-2px);
+  transition: all 0.15s ease;
+
+  &::after {
+    position: absolute;
+    inset: 2px 5px 15px;
+    overflow: clip;
+    background: linear-gradient(
+      180deg,
+      hsl(217deg 13% 18%),
+      hsl(217deg 13% 12%)
+    );
+    border-radius: 0 0 4px 4px;
+    box-shadow: inset 0 0 12px 0 hsl(0deg 0% 100% / 10%);
+    transform: rotateX(-10deg);
+    content: "";
+    transform-origin: top center;
+  }
+}
+
+.blackKeyActive {
+  background: linear-gradient(
+    to bottom,
+    hsl(217deg 13% 5%) 0,
+    hsl(217deg 13% 15%) 5px,
+    hsl(217deg 13% 10%) 100%
+  );
+
+  &::after {
+    background: linear-gradient(
+      180deg,
+      hsl(217deg 13% 18%),
+      hsl(217deg 13% 14%)
+    );
+    border-radius: 2px 2px 3px 3px;
+    transform: translateY(2px);
+    transform-origin: top center;
+  }
+}
+
+.keyboardControls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+  padding: 4px 8px;
+}
+
+.button {
+  padding: 0.875rem 1.75rem;
+  background: linear-gradient(
+    to bottom,
+    hsl(217deg 13% 20%),
+    hsl(217deg 13% 15%)
+  );
+  border: none;
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.button:hover {
+  background: linear-gradient(
+    to bottom,
+    hsl(217deg 13% 25%),
+    hsl(217deg 13% 20%)
+  );
+}
+
+.buttonActive {
+  background: linear-gradient(
+    to bottom,
+    hsl(217deg 13% 30%),
+    hsl(217deg 13% 25%)
+  );
+  box-shadow: inset 0 1px 1px hsl(217deg 13% 35%);
+}

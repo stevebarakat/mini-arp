@@ -1,11 +1,15 @@
-import React, { useState, useEffect, useImperativeHandle } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useImperativeHandle,
+} from "react";
 import * as Tone from "tone";
 import { INSTRUMENT_TYPES } from "../../constants";
-import "./keyboard.css";
+import styles from "./Keyboard.module.css";
 
 interface SharedKeyboardProps {
   activeKeys?: string[];
-  highlightedKeys?: string[];
   octaveRange?: { min: number; max: number };
   onKeyClick?: (note: string) => void;
   instrumentType?: string;
@@ -16,7 +20,6 @@ interface SharedKeyboardProps {
 
 const Keyboard = ({
   activeKeys = [],
-  highlightedKeys = [],
   octaveRange = { min: 4, max: 5 },
   onKeyClick = () => {},
   instrumentType = INSTRUMENT_TYPES.SYNTH,
@@ -73,67 +76,73 @@ const Keyboard = ({
   }, [instrumentType, currentInstrumentType]);
 
   // Handle key press
-  const handleKeyPress = (note: string) => {
-    if (!instrument || !isLoaded) return;
+  const handleKeyPress = useCallback(
+    (note: string) => {
+      if (!instrument || !isLoaded) return;
 
-    try {
-      if (Tone.context.state !== "running") {
-        Tone.start();
-      }
+      try {
+        if (Tone.context.state !== "running") {
+          Tone.start();
+        }
 
-      if (isStickyKeys) {
-        if (stickyNote === note) {
-          // If clicking the same note, release it
-          setStickyNote(null);
-          setActiveNotes((prev) => {
-            const next = new Set(prev);
-            next.delete(note);
-            return next;
-          });
-          onKeyClick("");
-        } else {
-          // If clicking a different note, switch to it
-          if (stickyNote) {
+        if (isStickyKeys) {
+          if (stickyNote === note) {
+            // If clicking the same note, release it
+            setStickyNote(null);
             setActiveNotes((prev) => {
               const next = new Set(prev);
-              next.delete(stickyNote);
-              next.add(note);
+              next.delete(note);
               return next;
             });
+            onKeyClick("");
           } else {
-            setActiveNotes((prev) => {
-              const next = new Set(prev);
-              next.add(note);
-              return next;
-            });
+            // If clicking a different note, switch to it
+            if (stickyNote) {
+              setActiveNotes((prev) => {
+                const next = new Set(prev);
+                next.delete(stickyNote);
+                next.add(note);
+                return next;
+              });
+            } else {
+              setActiveNotes((prev) => {
+                const next = new Set(prev);
+                next.add(note);
+                return next;
+              });
+            }
+            setStickyNote(note);
+            onKeyClick(note);
           }
-          setStickyNote(note);
+        } else {
+          // In non-sticky mode, just trigger the callback and set active note
+          setActiveNotes(new Set([note]));
           onKeyClick(note);
         }
-      } else {
-        // In non-sticky mode, just trigger the callback and set active note
-        setActiveNotes(new Set([note]));
-        onKeyClick(note);
+      } catch (e) {
+        console.error("Error handling key press:", e);
       }
-    } catch (e) {
-      console.error("Error handling key press:", e);
-    }
-  };
+    },
+    [instrument, isLoaded, isStickyKeys, stickyNote, onKeyClick]
+  );
 
   // Handle key release
-  const handleKeyRelease = (note: string) => {
-    if (!instrument || !isLoaded) return;
+  const handleKeyRelease = useCallback(
+    (note: string) => {
+      if (!instrument || !isLoaded) return;
 
-    try {
-      // Only release if this note is actually active and we're not in sticky mode
-      if (activeNotes.has(note) && !isStickyKeys) {
-        setActiveNotes(new Set());
-        onKeyClick("");
+      try {
+        // Only release if this note is actually active and we're not in sticky mode
+        if (activeNotes.has(note) && !isStickyKeys) {
+          setActiveNotes(new Set());
+          onKeyClick("");
+        }
+      } catch (e) {
+        console.error("Error handling key release:", e);
       }
-    } catch (e) {
-      console.error("Error handling key release:", e);
-    }
-  };
+    },
+    [instrument, isLoaded, isStickyKeys, onKeyClick, activeNotes]
+  );
 
   // Release all notes when unmounting or changing instruments
   useEffect(() => {
@@ -190,7 +199,7 @@ const Keyboard = ({
         currentInstrument.dispose();
       }
     };
-  }, [instrumentType, currentInstrumentType]);
+  }, [instrumentType, currentInstrumentType, instrument, activeNotes]);
 
   // Modify playNote to use a longer note duration for better envelope effect
   const playNote = async (note: string) => {
@@ -220,64 +229,119 @@ const Keyboard = ({
     }
   };
 
-  // Render white keys
-  const renderWhiteKeys = () => {
+  const WhiteKey = React.memo(
+    ({
+      isActive,
+      onPointerDown,
+      onPointerUp,
+      onPointerEnter,
+      onPointerLeave,
+    }: {
+      isActive: boolean;
+      onPointerDown: () => void;
+      onPointerUp: () => void;
+      onPointerEnter: () => void;
+      onPointerLeave: () => void;
+    }) => (
+      <div
+        className={`${styles.whiteKey} ${
+          isActive ? styles.whiteKeyActive : ""
+        }`}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
+      />
+    )
+  );
+
+  const BlackKey = React.memo(
+    ({
+      isActive,
+      position,
+      width,
+      onPointerDown,
+      onPointerUp,
+      onPointerEnter,
+      onPointerLeave,
+    }: {
+      isActive: boolean;
+      position: number;
+      width: number;
+      onPointerDown: () => void;
+      onPointerUp: () => void;
+      onPointerEnter: () => void;
+      onPointerLeave: () => void;
+    }) => (
+      <div
+        className={`${styles.blackKey} ${
+          isActive ? styles.blackKeyActive : ""
+        }`}
+        style={{ left: `${position}%`, width: `${width}%` }}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
+      />
+    )
+  );
+  const renderWhiteKeys = useCallback(() => {
     return keys
       .filter((key) => !key.isSharp)
       .map((key, index) => {
-        const isActive =
-          activeKeys.includes(key.note) || stickyNote === key.note;
-        const isHighlighted = highlightedKeys.includes(key.note);
-
+        const isActive = activeKeys.includes(key.note);
         return (
-          <div
+          <WhiteKey
             key={`white-${key.note}-${index}`}
-            className={`white-key ${isActive ? "active" : ""} ${
-              isHighlighted ? "highlighted" : ""
-            }`}
-            onPointerDown={() => handleKeyPress(key.note)}
+            isActive={isActive}
+            onPointerDown={() => {
+              handleKeyPress(key.note);
+            }}
             onPointerUp={() => handleKeyRelease(key.note)}
-            onPointerLeave={() => handleKeyRelease(key.note)}
+            onPointerEnter={function (): void {
+              throw new Error("Function not implemented.");
+            }}
+            onPointerLeave={function (): void {
+              throw new Error("Function not implemented.");
+            }}
           />
         );
       });
-  };
+  }, [keys, activeKeys, WhiteKey, handleKeyPress, handleKeyRelease]);
 
-  // Render black keys
-  const renderBlackKeys = () => {
-    // Calculate positions for black keys
-    const whiteKeyWidth = 100 / keys.filter((key) => !key.isSharp).length; // percentage width
+  const renderBlackKeys = useCallback(() => {
+    const whiteKeyWidth = 100 / keys.filter((key) => !key.isSharp).length;
 
     return keys
       .filter((key) => key.isSharp)
       .map((key, index) => {
-        const isActive =
-          activeKeys.includes(key.note) || stickyNote === key.note;
-        const isHighlighted = highlightedKeys.includes(key.note);
-
-        // Find the index of this black key in the full keys array
+        const isActive = activeKeys.includes(key.note);
         const keyIndex = keys.findIndex((k) => k.note === key.note);
-        // Calculate how many white keys came before this black key
         const whiteKeysBefore = keys
           .slice(0, keyIndex)
           .filter((k) => !k.isSharp).length;
-        // Position is based on white keys
         const position = (whiteKeysBefore - 0.3) * whiteKeyWidth;
 
         return (
-          <div
+          <BlackKey
             key={`black-${key.note}-${index}`}
-            className={`black-key ${isActive ? "active" : ""} ${
-              isHighlighted ? "highlighted" : ""
-            }`}
-            style={{ left: `${position}%`, width: `${whiteKeyWidth * 0.7}%` }}
-            onPointerDown={() => handleKeyPress(key.note)}
+            isActive={isActive}
+            position={position}
+            width={whiteKeyWidth * 0.7}
+            onPointerDown={() => {
+              handleKeyPress(key.note);
+            }}
             onPointerUp={() => handleKeyRelease(key.note)}
-            onPointerLeave={() => handleKeyRelease(key.note)}
+            onPointerEnter={function (): void {
+              throw new Error("Function not implemented.");
+            }}
+            onPointerLeave={function (): void {
+              throw new Error("Function not implemented.");
+            }}
           />
         );
       });
-  };
+  }, [keys, activeKeys, BlackKey, handleKeyPress, handleKeyRelease]);
 
   // Expose the playNote method to parent components via ref
   useImperativeHandle(ref, () => ({
@@ -285,7 +349,7 @@ const Keyboard = ({
   }));
 
   return (
-    <div className="keyboard-container">
+    <div className={styles.keyboardContainer}>
       <button
         className={`button ${isStickyKeys ? "active" : ""}`}
         onClick={toggleStickyKeys}
@@ -293,9 +357,11 @@ const Keyboard = ({
       >
         Hold
       </button>
-      <div className="keyboard">
-        <div className="piano-keys">
+      <div className={styles.keyboard}>
+        <div className={styles.pianoKeys}>
+          <div className={styles.leftShadow} />
           {renderWhiteKeys()}
+          <div className={styles.rightShadow} />
           {renderBlackKeys()}
         </div>
       </div>
