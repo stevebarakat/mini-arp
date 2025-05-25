@@ -234,14 +234,10 @@ const Keyboard = ({
       isActive,
       onPointerDown,
       onPointerUp,
-      onPointerEnter,
-      onPointerLeave,
     }: {
       isActive: boolean;
       onPointerDown: () => void;
       onPointerUp: () => void;
-      onPointerEnter: () => void;
-      onPointerLeave: () => void;
     }) => (
       <div
         className={`${styles.whiteKey} ${
@@ -249,8 +245,6 @@ const Keyboard = ({
         }`}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
-        onPointerEnter={onPointerEnter}
-        onPointerLeave={onPointerLeave}
       />
     )
   );
@@ -298,12 +292,6 @@ const Keyboard = ({
               handleKeyPress(key.note);
             }}
             onPointerUp={() => handleKeyRelease(key.note)}
-            onPointerEnter={function (): void {
-              throw new Error("Function not implemented.");
-            }}
-            onPointerLeave={function (): void {
-              throw new Error("Function not implemented.");
-            }}
           />
         );
       });
