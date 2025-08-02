@@ -77,13 +77,13 @@ function EffectsTabs({
             Filter{" "}
             <div
               className={`ledIndicator ${
-                isEffectActive("autoFilter") ? "active" : ""
+                isEffectActive("autofilter") ? "active" : ""
               }`}
             ></div>
             <label className="toggleSwitch">
               <input
                 type="checkbox"
-                checked={isEffectActive("autoFilter")}
+                checked={isEffectActive("autofilter")}
                 onChange={(e) => onToggleFilter(e.target.checked)}
               />
               <span className="toggleSlider"></span>
@@ -144,7 +144,7 @@ function EffectsTabs({
             depth={filterDepth}
             wet={filterWet}
             resonance={filterResonance}
-            enabled={isEffectActive("filter")}
+            enabled={isEffectActive("autofilter")}
             onToggle={onToggleFilter}
             onFrequencyChange={onFrequencyChange}
             onDepthChange={onDepthChange}
@@ -158,6 +158,8 @@ function EffectsTabs({
             delayTime={delayTime}
             feedback={delayFeedback}
             wet={delayWet}
+            enabled={isEffectActive("delay")}
+            onToggle={onToggleDelay}
             onDelayTimeChange={onDelayTimeChange}
             onFeedbackChange={onFeedbackChange}
             onWetChange={onDelayWetChange}

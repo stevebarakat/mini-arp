@@ -144,7 +144,7 @@ function App() {
   }
 
   function toggleFilter(enabled: boolean) {
-    effectsSend({ type: "TOGGLE_EFFECT", effect: "autoFilter", enabled });
+    effectsSend({ type: "TOGGLE_EFFECT", effect: "autofilter", enabled });
   }
 
   // Delay effect handlers

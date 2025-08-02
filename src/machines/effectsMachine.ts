@@ -9,7 +9,7 @@ import {
 } from "../constants";
 
 // Define the types of effects we support
-export type EffectType = "filter" | "delay" | "reverb" | "distortion";
+export type EffectType = "autofilter" | "delay" | "reverb" | "distortion";
 
 // Define the events that can be sent to the effects machine
 type EffectsEvent =
