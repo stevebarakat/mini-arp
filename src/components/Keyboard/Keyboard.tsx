@@ -100,6 +100,12 @@ function Keyboard({
     }
   }, [instrumentType, currentInstrumentType]);
 
+  // Clear key state when octave changes
+  useEffect(() => {
+    setPressedKeys(new Set());
+    setActiveNotes(new Set());
+  }, [currentOctave]);
+
   // Handle key press
   const handleKeyPress = useCallback(
     (note: string) => {
@@ -161,8 +167,16 @@ function Keyboard({
       if (!instrument || !isLoaded) return;
 
       try {
-        // Only release if this note is actually active and we're not in sticky mode
-        if (activeNotes.has(note) && !isStickyKeys) {
+        // Only release if we're not in sticky mode
+        if (!isStickyKeys) {
+          // Remove the key from pressed keys
+          setPressedKeys((prev) => {
+            const next = new Set(prev);
+            next.delete(key);
+            return next;
+          });
+
+          // Remove the note from active notes
           setActiveNotes((prev) => {
             const next = new Set(prev);
             next.delete(note);
@@ -182,7 +196,7 @@ function Keyboard({
         console.error("Error handling key release:", e);
       }
     },
-    [instrument, isLoaded, isStickyKeys, onKeyClick, activeNotes, pressedKeys]
+    [instrument, isLoaded, isStickyKeys, onKeyClick, pressedKeys]
   );
 
   // Generate keyboard mapping based on current octave
@@ -239,6 +253,7 @@ function Keyboard({
       if (note && !pressedKeys.has(key)) {
         event.preventDefault();
         setPressedKeys((prev) => new Set(prev).add(key));
+
         handleKeyPress(note);
       } else if (OCTAVE_CONTROLS[key]) {
         event.preventDefault();
@@ -260,11 +275,6 @@ function Keyboard({
 
       if (note && pressedKeys.has(key)) {
         event.preventDefault();
-        setPressedKeys((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(key);
-          return newSet;
-        });
         handleKeyRelease(note, key);
       }
     },
@@ -290,6 +300,8 @@ function Keyboard({
         instrument.triggerRelease(notes);
         setActiveNotes(new Set());
       }
+      // Clear all state
+      setPressedKeys(new Set());
     };
   }, [instrument, activeNotes]);
 
