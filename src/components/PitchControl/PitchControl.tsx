@@ -10,7 +10,7 @@ type PitchControlProps = {
 function PitchControl({ pitch, onPitchChange }: PitchControlProps) {
   return (
     <div className={styles.sliderContainer}>
-      <label className={styles.label}>Pitch (st)</label>
+      <label className={styles.label}>Pitch {pitch} semitones</label>
       <Slider.Root
         className={styles.sliderRoot}
         value={[pitch]}
@@ -24,7 +24,6 @@ function PitchControl({ pitch, onPitchChange }: PitchControlProps) {
         </Slider.Track>
         <Slider.Thumb className={styles.sliderThumb} />
       </Slider.Root>
-      <span className={styles.value}>{pitch}</span>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Grid } from "../../machines/sequencerMachine";
-import styles from "./styles.module.css";
+import styles from "./sequencer-grid.module.css";
 
 type SequencerGridProps = {
   grid: Grid;

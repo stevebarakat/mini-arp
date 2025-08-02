@@ -54,9 +54,3 @@
   outline: none;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
-
-.value {
-  font-size: 14px;
-  color: #666;
-  text-align: center;
-}

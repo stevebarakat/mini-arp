@@ -10,7 +10,7 @@ type TempoControlProps = {
 function TempoControl({ tempo, onTempoChange }: TempoControlProps) {
   return (
     <div className={styles.sliderContainer}>
-      <label className={styles.label}>Tempo (bpm)</label>
+      <label className={styles.label}>Tempo: {tempo} bpm</label>
       <Slider.Root
         className={styles.sliderRoot}
         value={[tempo]}
@@ -24,7 +24,6 @@ function TempoControl({ tempo, onTempoChange }: TempoControlProps) {
         </Slider.Track>
         <Slider.Thumb className={styles.sliderThumb} />
       </Slider.Root>
-      <span className={styles.value}>{tempo}</span>
     </div>
   );
 }

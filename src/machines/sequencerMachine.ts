@@ -26,7 +26,7 @@ const INTERVALS = {
   A: 9,
   "A#": 10,
   B: 11,
-};
+} as const;
 
 // Calculate semitones between two notes
 const calculateSemitones = (fromNote: string, toNote: string): number => {
@@ -38,7 +38,6 @@ const calculateSemitones = (fromNote: string, toNote: string): number => {
   const fromInterval = INTERVALS[fromNoteName as keyof typeof INTERVALS];
   const toInterval = INTERVALS[toNoteName as keyof typeof INTERVALS];
 
-  // Calculate the total interval difference
   const octaveDiff = toOctave - fromOctave;
   const noteDiff = toInterval - fromInterval;
 
@@ -62,7 +61,7 @@ const HI_HAT_CONFIG = {
     frequency: 5000,
     Q: 1,
   },
-};
+} as const;
 
 // Default hi-hat pattern (8 steps)
 export const DEFAULT_HI_HAT_PATTERN = Array(8)
@@ -99,6 +98,139 @@ type SequencerContext = {
   isConnectedToEffects: boolean;
 };
 
+// Pure functions for grid manipulation
+const createDeepGridCopy = (grid: Grid): Grid => {
+  return grid.map((row) => [...row]);
+};
+
+const toggleGridCell = (
+  grid: Grid,
+  rowIndex: number,
+  colIndex: number
+): Grid => {
+  const newGrid = createDeepGridCopy(grid);
+
+  if (newGrid[rowIndex][colIndex]) {
+    newGrid[rowIndex][colIndex] = false;
+  } else {
+    for (let rowIdx = 0; rowIdx < newGrid.length; rowIdx++) {
+      newGrid[rowIdx][colIndex] = false;
+    }
+    newGrid[rowIndex][colIndex] = true;
+  }
+
+  return newGrid;
+};
+
+const toggleHiHatStep = (pattern: boolean[], step: number): boolean[] => {
+  const newPattern = [...pattern];
+  newPattern[step] = !newPattern[step];
+  return newPattern;
+};
+
+// Pure function to calculate note to play
+const calculateNoteToPlay = (
+  rootNote: string,
+  rowIndex: number,
+  pitch: number
+): string => {
+  const baseNote = NOTES[rowIndex];
+  const patternInterval = calculateSemitones("C4", baseNote);
+  return transposeNote(rootNote, patternInterval + pitch);
+};
+
+// Pure function to create sequence callback
+const createSequenceCallback =
+  (context: SequencerContext) => (time: number, step: number) => {
+    // Play melodic pattern
+    context.grid.forEach((row, rowIndex) => {
+      if (row[step % 8]) {
+        const noteToPlay = calculateNoteToPlay(
+          context.rootNote,
+          rowIndex,
+          context.pitch
+        );
+
+        if (context.synth) {
+          context.synth.triggerAttackRelease(noteToPlay, "8n", time);
+        }
+      }
+    });
+
+    // Play hi-hat pattern
+    if (context.hiHatPattern[step] && context.noiseSynth) {
+      context.noiseSynth.triggerAttackRelease("8n", time);
+    }
+  };
+
+// Pure function to create and start sequence
+const createAndStartSequence = (context: SequencerContext): Sequence => {
+  const seq = new Sequence(
+    createSequenceCallback(context),
+    Array.from({ length: 8 }, (_, i) => i),
+    "8n"
+  );
+
+  seq.start(0);
+  getTransport().start();
+  return seq;
+};
+
+// Pure function to recreate sequence
+const recreateSequence = (context: SequencerContext): void => {
+  if (context.sequence) {
+    context.sequence.dispose();
+    const newSequence = createAndStartSequence(context);
+    context.sequence = newSequence;
+  }
+};
+
+// Pure function to connect synths to effects
+const connectSynthsToEffects = (
+  context: SequencerContext,
+  effectsContext: EffectsContext
+): void => {
+  if (context.synth) {
+    connectToEffects(context.synth, effectsContext);
+  }
+  if (context.noiseSynth) {
+    connectToEffects(context.noiseSynth, effectsContext);
+  }
+};
+
+// Pure function to update tempo
+const updateTempo = (tempo: number): void => {
+  getTransport().bpm.value = tempo;
+};
+
+// Pure function to stop transport and sequence
+const stopTransportAndSequence = (context: SequencerContext): void => {
+  if (context.sequence) {
+    context.sequence.stop();
+  }
+  getTransport().stop();
+};
+
+// Pure function to clean up step tracker
+const cleanupStepTracker = (context: SequencerContext): void => {
+  if (context.stepTrackerId !== null) {
+    getTransport().clear(context.stepTrackerId);
+  }
+};
+
+// Pure function to dispose resources
+const disposeResources = (context: SequencerContext): void => {
+  if (context.sequence) {
+    context.sequence.dispose();
+  }
+  if (context.synth) {
+    context.synth.dispose();
+  }
+  if (context.noiseSynth) {
+    context.noiseSynth.dispose();
+  }
+};
+
 export const sequencerMachine = setup({
   types: {
     context: {} as SequencerContext,
@@ -112,7 +244,6 @@ export const sequencerMachine = setup({
         sendBack({ type: "STEP_CHANGE", step });
       }, "8n");
 
-      // Send the ID back to the parent machine
       sendBack({ type: "STORE_STEP_TRACKER_ID", id });
 
       return () => transport.clear(id);
@@ -136,402 +267,129 @@ export const sequencerMachine = setup({
     isConnectedToEffects: false,
   },
   entry: assign({
-    // Create the synth
-    synth: () => {
-      const synth = new AMSynth(SYNTH_CONFIG);
-      return synth;
-    },
-    // Create the noise synth for hi-hats
-    noiseSynth: () => {
-      const noiseSynth = new NoiseSynth(HI_HAT_CONFIG);
-      return noiseSynth;
-    },
+    synth: () => new AMSynth(SYNTH_CONFIG),
+    noiseSynth: () => new NoiseSynth(HI_HAT_CONFIG),
   }),
   states: {
     stopped: {
-      entry: [
-        ({ context }) => {
-          if (context.sequence) {
-            context.sequence.stop();
-          }
-          getTransport().stop();
-        },
-      ],
+      entry: ({ context }) => stopTransportAndSequence(context),
       on: {
-        PLAY: {
-          target: "playing",
-        },
+        PLAY: { target: "playing" },
         UPDATE_NOTE: {
-          actions: assign({
-            note: ({ event }) => event.note,
-          }),
+          actions: assign({ note: ({ event }) => event.note }),
         },
         UPDATE_PITCH: {
-          actions: assign({
-            pitch: ({ event }) => event.pitch,
-          }),
+          actions: assign({ pitch: ({ event }) => event.pitch }),
         },
         SET_GRID: {
-          actions: assign({
-            grid: ({ event }) => event.grid,
-          }),
+          actions: assign({ grid: ({ event }) => event.grid }),
         },
         SET_ROOT_NOTE: {
-          actions: [
-            assign({
-              rootNote: ({ event }) => event.note,
-            }),
-          ],
+          actions: assign({ rootNote: ({ event }) => event.note }),
         },
         TRANSPOSE_TO_NOTE: {
-          actions: [
-            assign({
-              rootNote: ({ event }) => event.note,
-            }),
-          ],
+          actions: assign({ rootNote: ({ event }) => event.note }),
         },
         UPDATE_TEMPO: {
           actions: [
-            assign({
-              tempo: ({ event }) => event.tempo,
-            }),
-            ({ context }) => {
-              getTransport().bpm.value = context.tempo;
-            },
+            assign({ tempo: ({ event }) => event.tempo }),
+            ({ context }) => updateTempo(context.tempo),
           ],
         },
         TOGGLE_CELL: {
           actions: assign({
-            grid: ({ context, event }) => {
-              const newGrid = [...context.grid];
-
-              // Create a deep copy of the grid
-              for (let i = 0; i < newGrid.length; i++) {
-                newGrid[i] = [...newGrid[i]];
-              }
-
-              // If the cell is already selected, just deselect it
-              if (newGrid[event.rowIndex][event.colIndex]) {
-                newGrid[event.rowIndex][event.colIndex] = false;
-              } else {
-                // If the cell is not selected, first deselect any other cells in the same column
-                for (let rowIdx = 0; rowIdx < newGrid.length; rowIdx++) {
-                  newGrid[rowIdx][event.colIndex] = false;
-                }
-                // Then select the clicked cell
-                newGrid[event.rowIndex][event.colIndex] = true;
-              }
-
-              return newGrid;
-            },
+            grid: ({ context, event }) =>
+              toggleGridCell(context.grid, event.rowIndex, event.colIndex),
           }),
         },
         TOGGLE_HI_HAT: {
           actions: assign({
-            hiHatPattern: ({ context, event }) => {
-              const newPattern = [...context.hiHatPattern];
-              newPattern[event.step] = !newPattern[event.step];
-              return newPattern;
-            },
+            hiHatPattern: ({ context, event }) =>
+              toggleHiHatStep(context.hiHatPattern, event.step),
           }),
         },
         CONNECT_TO_EFFECTS: {
           actions: [
-            ({ context, event }) => {
-              if (context.synth) {
-                connectToEffects(context.synth, event.effectsContext);
-              }
-              if (context.noiseSynth) {
-                connectToEffects(context.noiseSynth, event.effectsContext);
-              }
-              return true;
-            },
-            assign({
-              isConnectedToEffects: () => {
-                return true;
-              },
-            }),
+            ({ context, event }) =>
+              connectSynthsToEffects(context, event.effectsContext),
+            assign({ isConnectedToEffects: () => true }),
           ],
         },
       },
     },
     playing: {
       entry: [
-        ({ context }) => {
-          getTransport().bpm.value = context.tempo;
-        },
+        ({ context }) => updateTempo(context.tempo),
         assign({
-          sequence: ({ context }) => {
-            // Create a new sequence
-            const seq = new Sequence(
-              (time, step) => {
-                // Play melodic pattern
-                context.grid.forEach((row, rowIndex) => {
-                  if (row[step % 8]) {
-                    // Use modulo 8 for melodic pattern
-                    // Calculate the note to play based on the root note and row
-                    const baseNote = NOTES[rowIndex];
-                    const patternInterval = calculateSemitones("C4", baseNote);
-                    const noteToPlay = transposeNote(
-                      context.rootNote,
-                      patternInterval + context.pitch
-                    );
-
-                    // Play the note
-                    if (context.synth) {
-                      context.synth.triggerAttackRelease(
-                        noteToPlay,
-                        "8n",
-                        time
-                      );
-                    }
-                  }
-                });
-
-                // Play hi-hat pattern
-                if (context.hiHatPattern[step] && context.noiseSynth) {
-                  context.noiseSynth.triggerAttackRelease("8n", time);
-                }
-              },
-              Array.from({ length: 8 }, (_, i) => i), // 8-step sequence
-              "8n"
-            );
-
-            // Start the sequence
-            seq.start(0);
-            getTransport().start();
-
-            return seq;
-          },
+          sequence: ({ context }) => createAndStartSequence(context),
         }),
-        // Start the step tracker
         enqueueActions(({ enqueue }) => {
           enqueue.spawnChild("stepTracker");
         }),
       ],
       on: {
-        STOP: {
-          target: "stopped",
-        },
+        STOP: { target: "stopped" },
         UPDATE_NOTE: {
-          actions: assign({
-            note: ({ event }) => event.note,
-          }),
+          actions: assign({ note: ({ event }) => event.note }),
         },
         UPDATE_PITCH: {
           actions: [
-            assign({
-              pitch: ({ event }) => event.pitch,
-            }),
-            ({ context }) => {
-              // Recreate the sequence with the new pitch value
-              if (context.sequence) {
-                context.sequence.dispose();
-                const seq = new Sequence(
-                  (time, step) => {
-                    // Play melodic pattern
-                    context.grid.forEach((row, rowIndex) => {
-                      if (row[step % 8]) {
-                        // Calculate the note to play based on the root note and row
-                        const baseNote = NOTES[rowIndex];
-                        const patternInterval = calculateSemitones(
-                          "C4",
-                          baseNote
-                        );
-                        const noteToPlay = transposeNote(
-                          context.rootNote,
-                          patternInterval + context.pitch
-                        );
-
-                        // Play the note
-                        if (context.synth) {
-                          context.synth.triggerAttackRelease(
-                            noteToPlay,
-                            "8n",
-                            time
-                          );
-                        }
-                      }
-                    });
-
-                    // Play hi-hat pattern
-                    if (context.hiHatPattern[step] && context.noiseSynth) {
-                      context.noiseSynth.triggerAttackRelease("8n", time);
-                    }
-                  },
-                  Array.from({ length: 8 }, (_, i) => i),
-                  "8n"
-                );
-
-                // Start the sequence from the current position
-                seq.start(0);
-                context.sequence = seq;
-              }
-            },
+            assign({ pitch: ({ event }) => event.pitch }),
+            ({ context }) => recreateSequence(context),
           ],
         },
         SET_GRID: {
-          actions: assign({
-            grid: ({ event }) => event.grid,
-          }),
+          actions: assign({ grid: ({ event }) => event.grid }),
         },
         SET_ROOT_NOTE: {
           actions: [
-            assign({
-              rootNote: ({ event }) => event.note,
-            }),
+            assign({ rootNote: ({ event }) => event.note }),
+            ({ context }) => recreateSequence(context),
           ],
         },
         TRANSPOSE_TO_NOTE: {
           actions: [
-            assign({
-              rootNote: ({ event }) => event.note,
-            }),
-            ({ context }) => {
-              // Recreate the sequence with the new root note
-              if (context.sequence) {
-                context.sequence.dispose();
-                const seq = new Sequence(
-                  (time, step) => {
-                    // Play melodic pattern
-                    context.grid.forEach((row, rowIndex) => {
-                      if (row[step % 8]) {
-                        // Calculate the note to play based on the root note and row
-                        const baseNote = NOTES[rowIndex];
-                        const patternInterval = calculateSemitones(
-                          "C4",
-                          baseNote
-                        );
-                        const noteToPlay = transposeNote(
-                          context.rootNote, // Use the updated root note from context
-                          patternInterval + context.pitch
-                        );
-
-                        // Play the note
-                        if (context.synth) {
-                          context.synth.triggerAttackRelease(
-                            noteToPlay,
-                            "8n",
-                            time
-                          );
-                        }
-                      }
-                    });
-
-                    // Play hi-hat pattern
-                    if (context.hiHatPattern[step] && context.noiseSynth) {
-                      context.noiseSynth.triggerAttackRelease("8n", time);
-                    }
-                  },
-                  Array.from({ length: 8 }, (_, i) => i),
-                  "8n"
-                );
-
-                // Start the sequence from the current position
-                seq.start(0);
-                context.sequence = seq;
-              }
-            },
+            assign({ rootNote: ({ event }) => event.note }),
+            ({ context }) => recreateSequence(context),
           ],
         },
         UPDATE_TEMPO: {
           actions: [
-            assign({
-              tempo: ({ event }) => event.tempo,
-            }),
-            ({ context }) => {
-              getTransport().bpm.value = context.tempo;
-            },
+            assign({ tempo: ({ event }) => event.tempo }),
+            ({ context }) => updateTempo(context.tempo),
           ],
         },
         TOGGLE_CELL: {
           actions: assign({
-            grid: ({ context, event }) => {
-              const newGrid = [...context.grid];
-
-              // Create a deep copy of the grid
-              for (let i = 0; i < newGrid.length; i++) {
-                newGrid[i] = [...newGrid[i]];
-              }
-
-              // If the cell is already selected, just deselect it
-              if (newGrid[event.rowIndex][event.colIndex]) {
-                newGrid[event.rowIndex][event.colIndex] = false;
-              } else {
-                // If the cell is not selected, first deselect any other cells in the same column
-                for (let rowIdx = 0; rowIdx < newGrid.length; rowIdx++) {
-                  newGrid[rowIdx][event.colIndex] = false;
-                }
-                // Then select the clicked cell
-                newGrid[event.rowIndex][event.colIndex] = true;
-              }
-
-              return newGrid;
-            },
+            grid: ({ context, event }) =>
+              toggleGridCell(context.grid, event.rowIndex, event.colIndex),
           }),
         },
         TOGGLE_HI_HAT: {
           actions: assign({
-            hiHatPattern: ({ context, event }) => {
-              const newPattern = [...context.hiHatPattern];
-              newPattern[event.step] = !newPattern[event.step];
-              return newPattern;
-            },
+            hiHatPattern: ({ context, event }) =>
+              toggleHiHatStep(context.hiHatPattern, event.step),
           }),
         },
         STEP_CHANGE: {
-          actions: assign({
-            currentStep: ({ event }) => event.step,
-          }),
+          actions: assign({ currentStep: ({ event }) => event.step }),
         },
         STORE_STEP_TRACKER_ID: {
-          actions: assign({
-            stepTrackerId: ({ event }) => event.id,
-          }),
+          actions: assign({ stepTrackerId: ({ event }) => event.id }),
         },
         CONNECT_TO_EFFECTS: {
           actions: [
-            ({ context, event }) => {
-              if (context.synth) {
-                connectToEffects(context.synth, event.effectsContext);
-              }
-              if (context.noiseSynth) {
-                connectToEffects(context.noiseSynth, event.effectsContext);
-              }
-              return true;
-            },
-            assign({
-              isConnectedToEffects: () => {
-                return true;
-              },
-            }),
+            ({ context, event }) =>
+              connectSynthsToEffects(context, event.effectsContext),
+            assign({ isConnectedToEffects: () => true }),
           ],
         },
       },
-      exit: [
-        ({ context }) => {
-          if (context.sequence) {
-            context.sequence.stop();
-          }
-          if (context.stepTrackerId !== null) {
-            getTransport().clear(context.stepTrackerId);
-          }
-        },
-      ],
+      exit: ({ context }) => {
+        stopTransportAndSequence(context);
+        cleanupStepTracker(context);
+      },
     },
   },
-  exit: [
-    ({ context }) => {
-      // Clean up resources
-      if (context.sequence) {
-        context.sequence.dispose();
-      }
-      if (context.synth) {
-        context.synth.dispose();
-      }
-      if (context.noiseSynth) {
-        context.noiseSynth.dispose();
-      }
-    },
-  ],
+  exit: ({ context }) => disposeResources(context),
 });
