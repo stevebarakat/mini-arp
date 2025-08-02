@@ -6,7 +6,7 @@ import {
   SYNTH_CONFIG,
 } from "../constants";
 import { setup, assign, fromCallback, enqueueActions } from "xstate";
-import * as Tone from "tone";
+import { AMSynth, NoiseSynth, Sequence, getTransport, Frequency } from "tone";
 import { DEFAULT_TEMPO } from "../constants";
 import { connectToEffects, EffectsContext } from "./effectsMachine";
 
@@ -89,9 +89,9 @@ type SequencerContext = {
   rootNote: string;
   tempo: number;
   currentStep: number;
-  synth: Tone.AMSynth | null;
-  noiseSynth: Tone.NoiseSynth | null;
-  sequence: Tone.Sequence | null;
+  synth: AMSynth | null;
+  noiseSynth: NoiseSynth | null;
+  sequence: Sequence | null;
   grid: Grid;
   hiHatPattern: boolean[];
   pitch: number;
@@ -106,7 +106,7 @@ export const sequencerMachine = setup({
   },
   actors: {
     stepTracker: fromCallback(({ sendBack }) => {
-      const transport = Tone.getTransport();
+      const transport = getTransport();
       const id = transport.scheduleRepeat(() => {
         const step = Math.floor(transport.ticks / 96) % 8;
         sendBack({ type: "STEP_CHANGE", step });
@@ -138,12 +138,12 @@ export const sequencerMachine = setup({
   entry: assign({
     // Create the synth
     synth: () => {
-      const synth = new Tone.AMSynth(SYNTH_CONFIG);
+      const synth = new AMSynth(SYNTH_CONFIG);
       return synth;
     },
     // Create the noise synth for hi-hats
     noiseSynth: () => {
-      const noiseSynth = new Tone.NoiseSynth(HI_HAT_CONFIG);
+      const noiseSynth = new NoiseSynth(HI_HAT_CONFIG);
       return noiseSynth;
     },
   }),
@@ -154,7 +154,7 @@ export const sequencerMachine = setup({
           if (context.sequence) {
             context.sequence.stop();
           }
-          Tone.getTransport().stop();
+          getTransport().stop();
         },
       ],
       on: {
@@ -196,7 +196,7 @@ export const sequencerMachine = setup({
               tempo: ({ event }) => event.tempo,
             }),
             ({ context }) => {
-              Tone.getTransport().bpm.value = context.tempo;
+              getTransport().bpm.value = context.tempo;
             },
           ],
         },
@@ -258,12 +258,12 @@ export const sequencerMachine = setup({
     playing: {
       entry: [
         ({ context }) => {
-          Tone.getTransport().bpm.value = context.tempo;
+          getTransport().bpm.value = context.tempo;
         },
         assign({
           sequence: ({ context }) => {
             // Create a new sequence
-            const seq = new Tone.Sequence(
+            const seq = new Sequence(
               (time, step) => {
                 // Play melodic pattern
                 context.grid.forEach((row, rowIndex) => {
@@ -299,7 +299,7 @@ export const sequencerMachine = setup({
 
             // Start the sequence
             seq.start(0);
-            Tone.getTransport().start();
+            getTransport().start();
 
             return seq;
           },
@@ -327,7 +327,7 @@ export const sequencerMachine = setup({
               // Recreate the sequence with the new pitch value
               if (context.sequence) {
                 context.sequence.dispose();
-                const seq = new Tone.Sequence(
+                const seq = new Sequence(
                   (time, step) => {
                     // Play melodic pattern
                     context.grid.forEach((row, rowIndex) => {
@@ -391,7 +391,7 @@ export const sequencerMachine = setup({
               // Recreate the sequence with the new root note
               if (context.sequence) {
                 context.sequence.dispose();
-                const seq = new Tone.Sequence(
+                const seq = new Sequence(
                   (time, step) => {
                     // Play melodic pattern
                     context.grid.forEach((row, rowIndex) => {
@@ -440,7 +440,7 @@ export const sequencerMachine = setup({
               tempo: ({ event }) => event.tempo,
             }),
             ({ context }) => {
-              Tone.getTransport().bpm.value = context.tempo;
+              getTransport().bpm.value = context.tempo;
             },
           ],
         },
@@ -514,7 +514,7 @@ export const sequencerMachine = setup({
             context.sequence.stop();
           }
           if (context.stepTrackerId !== null) {
-            Tone.getTransport().clear(context.stepTrackerId);
+            getTransport().clear(context.stepTrackerId);
           }
         },
       ],

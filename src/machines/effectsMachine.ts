@@ -1,5 +1,15 @@
 import { setup, assign } from "xstate";
-import * as Tone from "tone";
+import {
+  Channel,
+  AutoFilter,
+  FeedbackDelay,
+  Reverb,
+  Distortion,
+  Destination,
+  Gain,
+  Limiter,
+  now as toneNow,
+} from "tone";
 import {
   FILTER_CONFIG,
   EFFECTS_BUS,
@@ -8,7 +18,6 @@ import {
   DISTORTION_CONFIG,
 } from "../constants";
 
-// Define the types of effects we support
 export type EffectType = "autofilter" | "delay" | "reverb" | "distortion";
 
 // Define the events that can be sent to the effects machine
@@ -27,48 +36,39 @@ type EffectsEvent =
   | { type: "UPDATE_REVERB_WET"; wet: number }
   | { type: "UPDATE_DISTORTION_AMOUNT"; distortion: number }
   | { type: "UPDATE_DISTORTION_WET"; wet: number }
-  | { type: "TOGGLE_EFFECT"; effect: EffectType; enabled: boolean };
+  | { type: "TOGGLE_EFFECT"; effect: EffectType; enabled: boolean }
+  | { type: "CONNECT_INSTRUMENT"; instrument: any };
 
-// Define the context for the effects machine
+// Define the context type for the effects machine
 export type EffectsContext = {
   // The main effects bus that all effects send to
-  effectsBus: Tone.Channel | null;
+  effectsBus: Channel | null;
 
   // Individual effects
-  autoFilter: Tone.AutoFilter | null;
-  delay: Tone.FeedbackDelay | null;
-  reverb: Tone.Reverb | null;
-  distortion: Tone.Distortion | null;
+  autoFilter: AutoFilter | null;
+  delay: FeedbackDelay | null;
+  reverb: Reverb | null;
+  distortion: Distortion | null;
 
   // Channel senders for effects that don't have built-in send methods
-  channelSenders: Record<string, Tone.Channel>;
+  channelSenders: Record<string, Channel>;
 
   // Effect parameters
-  // AutoFilter parameters
   filterFrequency: number;
   filterDepth: number;
   filterWet: number;
   filterResonance: number;
-
-  // Delay parameters
   delayTime: number;
   delayFeedback: number;
   delayWet: number;
-
-  // Reverb parameters
   reverbDecay: number;
   reverbPreDelay: number;
   reverbWet: number;
-
-  // Distortion parameters
   distortionAmount: number;
   distortionWet: number;
 
   // Active effects
   activeEffects: EffectType[];
-
-  // Last time the autoFilter was started
-  lastAutoFilterStartTime: number;
 };
 
 // Timer management for autoFilter restarts
@@ -81,7 +81,7 @@ const clearAutoFilterRestartTimer = (): void => {
   }
 };
 
-const stopAutoFilterSafely = (autoFilter: Tone.AutoFilter | null): void => {
+const stopAutoFilterSafely = (autoFilter: AutoFilter | null): void => {
   if (!autoFilter) return;
 
   try {
@@ -91,23 +91,19 @@ const stopAutoFilterSafely = (autoFilter: Tone.AutoFilter | null): void => {
   }
 };
 
-const startAutoFilterAtNextTick = (
-  autoFilter: Tone.AutoFilter | null
-): void => {
+const startAutoFilterAtNextTick = (autoFilter: AutoFilter | null): void => {
   if (!autoFilter) return;
 
   try {
-    const now = Tone.now();
+    const now = toneNow();
     autoFilter.start(now + 0.1);
   } catch {
-    // Error handling for autoFilter start
+    console.warn("Failed to start autoFilter");
   }
 };
 
 // Pure function to restart autoFilter with delay
-const restartAutoFilterWithDelay = (
-  autoFilter: Tone.AutoFilter | null
-): void => {
+const restartAutoFilterWithDelay = (autoFilter: AutoFilter | null): void => {
   if (!autoFilter) return;
 
   clearAutoFilterRestartTimer();
@@ -119,15 +115,16 @@ const restartAutoFilterWithDelay = (
   }, 100);
 };
 
-const createEffectsBusWithDestination = (): Tone.Channel => {
-  const effectsBus = new Tone.Channel().toDestination();
+const createEffectsBusWithDestination = (): Channel => {
+  const effectsBus = new Channel().toDestination();
   effectsBus.receive(EFFECTS_BUS);
-  Tone.Destination.volume.value = 0;
+  // Set the destination volume to 0 to prevent feedback
+  Destination.volume.value = 0;
   return effectsBus;
 };
 
-const createAutoFilterWithConfiguration = (): Tone.AutoFilter => {
-  const autoFilter = new Tone.AutoFilter({
+const createAutoFilterWithConfiguration = (): AutoFilter => {
+  const autoFilter = new AutoFilter({
     frequency: FILTER_CONFIG.frequency,
     type: FILTER_CONFIG.type,
     depth: FILTER_CONFIG.depth,
@@ -141,44 +138,44 @@ const createAutoFilterWithConfiguration = (): Tone.AutoFilter => {
     wet: FILTER_CONFIG.wet,
   });
 
-  const startTime = Tone.now() + 0.1;
+  const startTime = toneNow() + 0.1;
   autoFilter.start(startTime);
 
   return autoFilter;
 };
 
-const createFeedbackDelayWithConfiguration = (): Tone.FeedbackDelay => {
-  return new Tone.FeedbackDelay({
+const createFeedbackDelayWithConfiguration = (): FeedbackDelay => {
+  return new FeedbackDelay({
     delayTime: DELAY_CONFIG.delayTime,
     feedback: DELAY_CONFIG.feedback,
     wet: DELAY_CONFIG.wet,
   });
 };
 
-const createReverbWithConfiguration = (): Tone.Reverb => {
-  return new Tone.Reverb({
+const createReverbWithConfiguration = (): Reverb => {
+  return new Reverb({
     decay: REVERB_CONFIG.decay,
     preDelay: REVERB_CONFIG.preDelay,
     wet: REVERB_CONFIG.wet,
   });
 };
 
-const createDistortionWithConfiguration = (): Tone.Distortion => {
-  return new Tone.Distortion({
+const createDistortionWithConfiguration = (): Distortion => {
+  return new Distortion({
     distortion: DISTORTION_CONFIG.distortion,
     oversample: DISTORTION_CONFIG.oversample,
     wet: DISTORTION_CONFIG.wet,
   });
 };
 
-const createChannelSendersForAllEffects = (): Record<string, Tone.Channel> => ({
-  autoFilter: new Tone.Channel(),
-  delay: new Tone.Channel(),
-  reverb: new Tone.Channel(),
-  distortion: new Tone.Channel(),
+const createChannelSendersForAllEffects = (): Record<string, Channel> => ({
+  autoFilter: new Channel(),
+  delay: new Channel(),
+  reverb: new Channel(),
+  distortion: new Channel(),
 });
 
-const disposeAudioNodeSafely = (node: Tone.ToneAudioNode | null): void => {
+const disposeAudioNodeSafely = (node: any | null): void => {
   if (node) {
     try {
       node.dispose();
@@ -189,7 +186,7 @@ const disposeAudioNodeSafely = (node: Tone.ToneAudioNode | null): void => {
 };
 
 // Pure function to disconnect an audio node
-const disconnectAudioNode = (node: Tone.ToneAudioNode | null): void => {
+const disconnectAudioNode = (node: any | null): void => {
   if (node) {
     try {
       node.disconnect();
@@ -201,12 +198,12 @@ const disconnectAudioNode = (node: Tone.ToneAudioNode | null): void => {
 
 // Pure function to create audio routing components
 const createAudioRoutingComponents = () => {
-  const preGain = new Tone.Gain(0.89);
-  const limiter = new Tone.Limiter(-18);
-  const finalBus = new Tone.Gain(0.85);
-  const filterDistortionPath = new Tone.Gain();
-  const delayPath = new Tone.Gain();
-  const reverbPath = new Tone.Gain();
+  const preGain = new Gain(0.89);
+  const limiter = new Limiter(-18);
+  const finalBus = new Gain(0.85);
+  const filterDistortionPath = new Gain();
+  const delayPath = new Gain();
+  const reverbPath = new Gain();
 
   return {
     preGain,
@@ -220,11 +217,11 @@ const createAudioRoutingComponents = () => {
 
 // Pure function to setup final audio chain
 const setupFinalAudioChain = (
-  finalBus: Tone.Gain,
-  preGain: Tone.Gain,
-  limiter: Tone.Limiter
+  finalBus: Gain,
+  preGain: Gain,
+  limiter: Limiter
 ): void => {
-  finalBus.chain(preGain, limiter, Tone.Destination);
+  finalBus.chain(preGain, limiter, Destination);
 };
 
 // Pure function to connect effects to paths
@@ -302,7 +299,7 @@ const ensureAudioRouting = (context: EffectsContext): boolean => {
 
 // Pure function to update filter frequency
 const updateFilterFrequency = (
-  autoFilter: Tone.AutoFilter | null,
+  autoFilter: AutoFilter | null,
   frequency: number
 ): void => {
   if (!autoFilter) {
@@ -320,7 +317,7 @@ const updateFilterFrequency = (
 
 // Pure function to update filter depth
 const updateFilterDepth = (
-  autoFilter: Tone.AutoFilter | null,
+  autoFilter: AutoFilter | null,
   depth: number
 ): void => {
   if (!autoFilter) {
@@ -337,10 +334,7 @@ const updateFilterDepth = (
 };
 
 // Pure function to update filter wet mix
-const updateFilterWet = (
-  autoFilter: Tone.AutoFilter | null,
-  wet: number
-): void => {
+const updateFilterWet = (autoFilter: AutoFilter | null, wet: number): void => {
   if (!autoFilter) {
     console.warn("Auto-filter not available for wet mix update");
     return;
@@ -355,7 +349,7 @@ const updateFilterWet = (
 
 // Pure function to update filter resonance
 const updateFilterResonance = (
-  autoFilter: Tone.AutoFilter | null,
+  autoFilter: AutoFilter | null,
   resonance: number
 ): void => {
   if (!autoFilter) {
@@ -372,7 +366,7 @@ const updateFilterResonance = (
 
 // Pure function to update delay time
 const updateDelayTime = (
-  delay: Tone.FeedbackDelay | null,
+  delay: FeedbackDelay | null,
   delayTime: number
 ): void => {
   if (!delay) {
@@ -389,7 +383,7 @@ const updateDelayTime = (
 
 // Pure function to update delay feedback
 const updateDelayFeedback = (
-  delay: Tone.FeedbackDelay | null,
+  delay: FeedbackDelay | null,
   feedback: number
 ): void => {
   if (!delay) {
@@ -405,10 +399,7 @@ const updateDelayFeedback = (
 };
 
 // Pure function to update delay wet mix
-const updateDelayWet = (
-  delay: Tone.FeedbackDelay | null,
-  wet: number
-): void => {
+const updateDelayWet = (delay: FeedbackDelay | null, wet: number): void => {
   if (!delay) {
     console.warn("Delay effect not available for wet mix update");
     return;
@@ -422,7 +413,7 @@ const updateDelayWet = (
 };
 
 // Pure function to update reverb decay
-const updateReverbDecay = (reverb: Tone.Reverb | null, decay: number): void => {
+const updateReverbDecay = (reverb: Reverb | null, decay: number): void => {
   if (!reverb) {
     console.warn("Reverb effect not available for decay update");
     return;
@@ -437,7 +428,7 @@ const updateReverbDecay = (reverb: Tone.Reverb | null, decay: number): void => {
 
 // Pure function to update reverb pre-delay
 const updateReverbPreDelay = (
-  reverb: Tone.Reverb | null,
+  reverb: Reverb | null,
   preDelay: number
 ): void => {
   if (!reverb) {
@@ -453,7 +444,7 @@ const updateReverbPreDelay = (
 };
 
 // Pure function to update reverb wet mix
-const updateReverbWet = (reverb: Tone.Reverb | null, wet: number): void => {
+const updateReverbWet = (reverb: Reverb | null, wet: number): void => {
   if (!reverb) {
     console.warn("Reverb effect not available for wet mix update");
     return;
@@ -468,7 +459,7 @@ const updateReverbWet = (reverb: Tone.Reverb | null, wet: number): void => {
 
 // Pure function to update distortion amount
 const updateDistortionAmount = (
-  distortion: Tone.Distortion | null,
+  distortion: Distortion | null,
   distortionAmount: number
 ): void => {
   if (!distortion) {
@@ -485,7 +476,7 @@ const updateDistortionAmount = (
 
 // Pure function to update distortion wet mix
 const updateDistortionWet = (
-  distortion: Tone.Distortion | null,
+  distortion: Distortion | null,
   wet: number
 ): void => {
   if (!distortion) {
@@ -507,7 +498,7 @@ const toggleEffectWet = (
   context: EffectsContext
 ): void => {
   switch (effect) {
-    case "autoFilter":
+    case "autofilter":
       if (context.autoFilter) {
         context.autoFilter.wet.value = enabled ? context.filterWet : 0;
       }
@@ -573,7 +564,6 @@ export const effectsMachine = setup({
     distortionAmount: DISTORTION_CONFIG.distortion,
     distortionWet: DISTORTION_CONFIG.wet,
     activeEffects: [],
-    lastAutoFilterStartTime: 0,
   },
   states: {
     inactive: {
@@ -587,13 +577,7 @@ export const effectsMachine = setup({
             reverb: createReverbWithConfiguration,
             distortion: createDistortionWithConfiguration,
             channelSenders: createChannelSendersForAllEffects,
-            activeEffects: () => [
-              "autoFilter",
-              "delay",
-              "reverb",
-              "distortion",
-            ],
-            lastAutoFilterStartTime: () => Tone.now(),
+            activeEffects: ["delay", "reverb", "distortion", "autofilter"],
           }),
         },
       },
@@ -636,7 +620,6 @@ export const effectsMachine = setup({
               return {};
             },
             activeEffects: () => [],
-            lastAutoFilterStartTime: () => 0,
           }),
         },
         UPDATE_FILTER_FREQUENCY: {
@@ -768,10 +751,10 @@ export const effectsMachine = setup({
 
 // Pure function to connect an instrument to the effects chain
 export const connectToEffects = (
-  instrument: Tone.ToneAudioNode,
-  context: EffectsContext
+  instrument: any,
+  effectsContext: EffectsContext
 ): void => {
-  if (!context.effectsBus) {
+  if (!effectsContext.effectsBus) {
     console.warn("Effects bus not available for routing");
     instrument.toDestination();
     return;
@@ -781,26 +764,26 @@ export const connectToEffects = (
   instrument.disconnect();
 
   // Create a splitter for parallel routing
-  const splitter = new Tone.Gain();
+  const splitter = new Gain();
   instrument.connect(splitter);
 
-  const { activeEffects } = context;
+  const { activeEffects } = effectsContext;
 
   // Connect to active effects in parallel
-  if (activeEffects.includes("autoFilter") && context.autoFilter) {
-    splitter.connect(context.autoFilter);
+  if (activeEffects.includes("autofilter") && effectsContext.autoFilter) {
+    splitter.connect(effectsContext.autoFilter);
   }
 
-  if (activeEffects.includes("delay") && context.delay) {
-    splitter.connect(context.delay);
+  if (activeEffects.includes("delay") && effectsContext.delay) {
+    splitter.connect(effectsContext.delay);
   }
 
-  if (activeEffects.includes("reverb") && context.reverb) {
-    splitter.connect(context.reverb);
+  if (activeEffects.includes("reverb") && effectsContext.reverb) {
+    splitter.connect(effectsContext.reverb);
   }
 
-  if (activeEffects.includes("distortion") && context.distortion) {
-    splitter.connect(context.distortion);
+  if (activeEffects.includes("distortion") && effectsContext.distortion) {
+    splitter.connect(effectsContext.distortion);
   }
 
   // If no effects are active, connect directly to destination
@@ -809,5 +792,5 @@ export const connectToEffects = (
   }
 
   // Ensure the effects chain is properly connected
-  ensureAudioRouting(context);
+  ensureAudioRouting(effectsContext);
 };

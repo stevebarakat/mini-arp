@@ -1,13 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useMachine } from "@xstate/react";
-import * as Tone from "tone";
+import { start } from "tone";
 import { sequencerMachine, effectsMachine, EffectType } from "./machines";
-import SequencerGrid from "./components/SequencerGrid";
-import TempoControl from "./components/TempoControl";
-import PitchControl from "./components/PitchControl";
-import Keyboard from "./components/Keyboard";
-import EffectsTabs from "./components/EffectsTabs";
+import LoadingSpinner from "./components/LoadingSpinner";
 import styles from "./styles/App.module.css";
+
+// Lazy load components for code splitting
+const SequencerGrid = lazy(() => import("./components/SequencerGrid"));
+const TempoControl = lazy(() => import("./components/TempoControl"));
+const PitchControl = lazy(() => import("./components/PitchControl"));
+const Keyboard = lazy(() => import("./components/Keyboard"));
+const EffectsTabs = lazy(() => import("./components/EffectsTabs"));
 
 // Define the state values type for type safety
 type SequencerStateValue = "playing" | "stopped";
@@ -84,7 +87,7 @@ function App() {
       sequencerSend({ type: "STOP" });
     } else {
       try {
-        await Tone.start();
+        await start();
         sequencerSend({ type: "PLAY" });
       } catch (error) {
         console.error("Error toggling playback:", error);
@@ -214,58 +217,66 @@ function App() {
     <div className={styles.container}>
       <div className={styles.sequencer}>
         <div className={styles.controlsContainer}>
-          <SequencerGrid
-            grid={grid}
-            currentStep={currentStep % 8}
-            pattern={hiHatPattern}
-            onToggleStep={toggleHiHat}
-            onToggleCell={toggleCell}
-          />
-          <div>
-            <EffectsTabs
-              filterFrequency={filterFrequency}
-              filterDepth={filterDepth}
-              filterWet={filterWet}
-              filterResonance={filterResonance}
-              delayTime={delayTime}
-              delayFeedback={delayFeedback}
-              delayWet={delayWet}
-              reverbDecay={reverbDecay}
-              reverbPreDelay={reverbPreDelay}
-              reverbWet={reverbWet}
-              distortionAmount={distortionAmount}
-              distortionWet={distortionWet}
-              onFrequencyChange={updateFilterFrequency}
-              onDepthChange={updateFilterDepth}
-              onFilterWetChange={updateFilterWet}
-              onResonanceChange={updateFilterResonance}
-              onDelayTimeChange={updateDelayTime}
-              onFeedbackChange={updateDelayFeedback}
-              onDelayWetChange={updateDelayWet}
-              onDecayChange={updateReverbDecay}
-              onPreDelayChange={updateReverbPreDelay}
-              onReverbWetChange={updateReverbWet}
-              onDistortionChange={updateDistortionAmount}
-              onDistortionWetChange={updateDistortionWet}
-              isEffectActive={isEffectActive}
-              onToggleFilter={toggleFilter}
-              onToggleDelay={toggleDelay}
-              onToggleReverb={toggleReverb}
-              onToggleDistortion={toggleDistortion}
+          <Suspense fallback={<LoadingSpinner />}>
+            <SequencerGrid
+              grid={grid}
+              currentStep={currentStep % 8}
+              pattern={hiHatPattern}
+              onToggleStep={toggleHiHat}
+              onToggleCell={toggleCell}
             />
+          </Suspense>
+          <div>
+            <Suspense fallback={<LoadingSpinner />}>
+              <EffectsTabs
+                filterFrequency={filterFrequency}
+                filterDepth={filterDepth}
+                filterWet={filterWet}
+                filterResonance={filterResonance}
+                delayTime={delayTime}
+                delayFeedback={delayFeedback}
+                delayWet={delayWet}
+                reverbDecay={reverbDecay}
+                reverbPreDelay={reverbPreDelay}
+                reverbWet={reverbWet}
+                distortionAmount={distortionAmount}
+                distortionWet={distortionWet}
+                onFrequencyChange={updateFilterFrequency}
+                onDepthChange={updateFilterDepth}
+                onFilterWetChange={updateFilterWet}
+                onResonanceChange={updateFilterResonance}
+                onDelayTimeChange={updateDelayTime}
+                onFeedbackChange={updateDelayFeedback}
+                onDelayWetChange={updateDelayWet}
+                onDecayChange={updateReverbDecay}
+                onPreDelayChange={updateReverbPreDelay}
+                onReverbWetChange={updateReverbWet}
+                onDistortionChange={updateDistortionAmount}
+                onDistortionWetChange={updateDistortionWet}
+                isEffectActive={isEffectActive}
+                onToggleFilter={toggleFilter}
+                onToggleDelay={toggleDelay}
+                onToggleReverb={toggleReverb}
+                onToggleDistortion={toggleDistortion}
+              />
+            </Suspense>
             <div className={styles.sequencerControls}>
-              <TempoControl tempo={tempo} onTempoChange={updateTempo} />
-              <PitchControl pitch={pitch} onPitchChange={updatePitch} />
+              <Suspense fallback={<LoadingSpinner />}>
+                <TempoControl tempo={tempo} onTempoChange={updateTempo} />
+                <PitchControl pitch={pitch} onPitchChange={updatePitch} />
+              </Suspense>
             </div>
           </div>
         </div>
-        <Keyboard
-          activeKeys={activeKeys}
-          onKeyClick={handleKeyClick}
-          isArpeggiatorMode={isArpeggiatorMode}
-          onToggleArpeggiatorMode={setIsArpeggiatorMode}
-          onStopArpeggiator={() => sequencerSend({ type: "STOP" })}
-        />
+        <Suspense fallback={<LoadingSpinner />}>
+          <Keyboard
+            activeKeys={activeKeys}
+            onKeyClick={handleKeyClick}
+            isArpeggiatorMode={isArpeggiatorMode}
+            onToggleArpeggiatorMode={setIsArpeggiatorMode}
+            onStopArpeggiator={() => sequencerSend({ type: "STOP" })}
+          />
+        </Suspense>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import * as Tone from "tone";
+import { PolySynth, Synth, Frequency, context, start } from "tone";
 import { INSTRUMENT_TYPES } from "../../constants";
 import styles from "./Keyboard.module.css";
 import { WhiteKey, BlackKey } from "./KeyboardKey";
@@ -49,7 +49,7 @@ function Keyboard({
   ref,
 }: KeyboardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [instrument, setInstrument] = useState<Tone.PolySynth | null>(null);
+  const [instrument, setInstrument] = useState<PolySynth | null>(null);
   const [currentInstrumentType, setCurrentInstrumentType] =
     useState(instrumentType);
   const [isStickyKeys, setIsStickyKeys] = useState(false);
@@ -88,9 +88,9 @@ function Keyboard({
       octave.forEach((key) => {
         const note = `${key.note}${o}`;
         // Only include notes from G3 to C5
-        const noteValue = Tone.Frequency(note).toMidi();
-        const g3Value = Tone.Frequency("G3").toMidi();
-        const c5Value = Tone.Frequency("C6").toMidi();
+        const noteValue = Frequency(note).toMidi();
+        const g3Value = Frequency("G3").toMidi();
+        const c5Value = Frequency("C6").toMidi();
 
         if (noteValue >= g3Value && noteValue <= c5Value) {
           keysArray.push({ note, isSharp: key.isSharp });
@@ -120,8 +120,8 @@ function Keyboard({
       if (!instrument || !isLoaded) return;
 
       try {
-        if (Tone.context.state !== "running") {
-          Tone.start();
+        if (context.state !== "running") {
+          start();
         }
 
         if (isStickyKeys) {
@@ -400,7 +400,7 @@ function Keyboard({
 
   // Initialize the instrument
   useEffect(() => {
-    let currentInstrument: Tone.PolySynth | null = null;
+    let currentInstrument: PolySynth | null = null;
 
     const initializeInstrument = async () => {
       try {
@@ -415,7 +415,7 @@ function Keyboard({
           instrument.dispose();
         }
 
-        currentInstrument = new Tone.PolySynth(Tone.Synth, {
+        currentInstrument = new PolySynth(Synth, {
           oscillator: {
             type: "triangle",
           },
@@ -425,7 +425,7 @@ function Keyboard({
         setInstrument(currentInstrument);
 
         // Start audio context
-        await Tone.start();
+        await start();
       } catch (e) {
         console.error("Error initializing instrument:", e);
         setIsLoaded(true);
@@ -448,8 +448,8 @@ function Keyboard({
     if (instrument && isLoaded) {
       try {
         // Ensure audio context is running
-        if (Tone.context.state !== "running") {
-          await Tone.start();
+        if (context.state !== "running") {
+          await start();
         }
         // Use a longer note duration to hear the envelope effect
         instrument.triggerAttackRelease(note, "4n");
