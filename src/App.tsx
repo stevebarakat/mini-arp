@@ -264,6 +264,7 @@ function App() {
           onKeyClick={handleKeyClick}
           isArpeggiatorMode={isArpeggiatorMode}
           onToggleArpeggiatorMode={setIsArpeggiatorMode}
+          onStopArpeggiator={() => sequencerSend({ type: "STOP" })}
         />
       </div>
     </div>

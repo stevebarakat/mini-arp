@@ -4,6 +4,7 @@ import React, {
   useCallback,
   useImperativeHandle,
   useMemo,
+  useRef,
 } from "react";
 import * as Tone from "tone";
 import { INSTRUMENT_TYPES } from "../../constants";
@@ -18,6 +19,7 @@ type KeyboardProps = {
   instrumentType?: string;
   isArpeggiatorMode?: boolean;
   onToggleArpeggiatorMode?: (checked: boolean) => void;
+  onStopArpeggiator?: () => void;
   ref?: React.RefObject<{
     playNote: (note: string) => void;
   }>;
@@ -43,6 +45,7 @@ function Keyboard({
   instrumentType = INSTRUMENT_TYPES.SYNTH,
   isArpeggiatorMode = false,
   onToggleArpeggiatorMode = () => {},
+  onStopArpeggiator = () => {},
   ref,
 }: KeyboardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -57,6 +60,7 @@ function Keyboard({
 
   // Keep track of computer keyboard pressed keys
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
+  const pressedKeysRef = useRef<Set<string>>(new Set());
 
   // Current octave for keyboard mapping
   const [currentOctave, setCurrentOctave] = useState(4);
@@ -168,11 +172,13 @@ function Keyboard({
   // Handle key release
   const handleKeyRelease = useCallback(
     (note: string, key: string) => {
+      console.log("Key release called:", { note, key, isStickyKeys });
       if (!instrument || !isLoaded) return;
 
       try {
         // Only release if we're not in sticky mode
         if (!isStickyKeys) {
+          console.log("Not in sticky mode, stopping arpeggiator");
           // Remove the key from pressed keys
           setPressedKeys((prev) => {
             const next = new Set(prev);
@@ -187,21 +193,84 @@ function Keyboard({
             return next;
           });
 
-          // Check if this was the last key being released
-          const remainingPressedKeys = new Set(pressedKeys);
-          remainingPressedKeys.delete(key);
-
-          // Only stop the arpeggiator if no more keys are pressed
-          if (remainingPressedKeys.size === 0) {
-            onKeyClick("");
-          }
+          // Always stop the arpeggiator when a key is released
+          onStopArpeggiator();
+        } else {
+          console.log("In sticky mode, not stopping arpeggiator");
         }
       } catch (e) {
         console.error("Error handling key release:", e);
       }
     },
-    [instrument, isLoaded, isStickyKeys, onKeyClick, pressedKeys]
+    [instrument, isLoaded, isStickyKeys, onStopArpeggiator]
   );
+
+  // Handle mouse interactions (always non-sticky)
+  const [mousePressedNote, setMousePressedNote] = useState<string | null>(null);
+
+  const handleMouseDown = useCallback(
+    (note: string) => {
+      setMousePressedNote(note);
+      onKeyClick(note);
+    },
+    [onKeyClick]
+  );
+
+  const handleMouseUp = useCallback(() => {
+    console.log("Mouse up called, mousePressedNote:", mousePressedNote);
+    if (mousePressedNote) {
+      console.log("Calling onKeyClick('') to stop arpeggiator");
+      onKeyClick("");
+      setMousePressedNote(null);
+    }
+  }, [onKeyClick, mousePressedNote]);
+
+  // Direct arpeggiator control for mouse
+  const handleMouseDownDirect = useCallback(
+    (note: string) => {
+      setMousePressedNote(note);
+      if (isStickyKeys) {
+        // In sticky mode, use the same logic as keyboard
+        if (stickyNote === note) {
+          // If clicking the same note, release it
+          setStickyNote(null);
+          onStopArpeggiator();
+        } else {
+          // If clicking a different note, switch to it
+          setStickyNote(note);
+          onKeyClick(note);
+        }
+      } else {
+        // In non-sticky mode, just start the arpeggiator
+        onKeyClick(note);
+      }
+    },
+    [onKeyClick, onStopArpeggiator, isStickyKeys, stickyNote]
+  );
+
+  const handleMouseUpDirect = useCallback(() => {
+    console.log("Mouse up direct called, mousePressedNote:", mousePressedNote);
+    if (mousePressedNote) {
+      if (!isStickyKeys) {
+        // Only stop in non-sticky mode
+        console.log("Stopping arpeggiator directly");
+        onStopArpeggiator();
+      }
+      setMousePressedNote(null);
+    }
+  }, [mousePressedNote, onStopArpeggiator, isStickyKeys]);
+
+  // Global mouse up handler to ensure mouse release is caught
+  const handleGlobalMouseUp = useCallback(() => {
+    console.log("Global mouse up called, mousePressedNote:", mousePressedNote);
+    if (mousePressedNote) {
+      console.log(
+        "Global mouse up: Calling onKeyClick('') to stop arpeggiator"
+      );
+      onKeyClick("");
+      setMousePressedNote(null);
+    }
+  }, [onKeyClick, mousePressedNote]);
 
   // Generate keyboard mapping based on current octave
   const getKeyboardMapping = useCallback(() => {
@@ -236,22 +305,36 @@ function Keyboard({
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
+      console.log("Key down:", key);
       const keyboardMapping = getKeyboardMapping();
       const note = keyboardMapping[key];
 
       // Check octave controls first
       if (OCTAVE_CONTROLS[key]) {
         event.preventDefault();
+        console.log("Octave control:", key);
         if (OCTAVE_CONTROLS[key] === "increment" && currentOctave < 6) {
           setCurrentOctave((prev) => prev + 1);
         } else if (OCTAVE_CONTROLS[key] === "decrement" && currentOctave > 2) {
           setCurrentOctave((prev) => prev - 1);
         }
-      } else if (note && !pressedKeys.has(key)) {
+      } else if (note && !pressedKeysRef.current.has(key)) {
         event.preventDefault();
+        console.log("Key press:", {
+          key,
+          note,
+          pressedKeys: Array.from(pressedKeysRef.current),
+        });
+        pressedKeysRef.current.add(key);
         setPressedKeys((prev) => new Set(prev).add(key));
 
         handleKeyPress(note);
+      } else {
+        console.log("Key ignored:", {
+          key,
+          note,
+          pressedKeys: Array.from(pressedKeys),
+        });
       }
     },
     [pressedKeys, handleKeyPress, getKeyboardMapping, currentOctave]
@@ -260,12 +343,30 @@ function Keyboard({
   const handleKeyUp = useCallback(
     (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
+      console.log("Key up:", key);
       const keyboardMapping = getKeyboardMapping();
       const note = keyboardMapping[key];
 
-      if (note && pressedKeys.has(key)) {
+      if (note && pressedKeysRef.current.has(key)) {
         event.preventDefault();
+        console.log("Key release:", {
+          key,
+          note,
+          pressedKeys: Array.from(pressedKeysRef.current),
+        });
+        pressedKeysRef.current.delete(key);
+        setPressedKeys((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
         handleKeyRelease(note, key);
+      } else {
+        console.log("Key up ignored:", {
+          key,
+          note,
+          pressedKeys: Array.from(pressedKeysRef.current),
+        });
       }
     },
     [pressedKeys, handleKeyRelease, getKeyboardMapping]
@@ -275,12 +376,14 @@ function Keyboard({
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("mouseup", handleGlobalMouseUp);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [handleKeyDown, handleKeyUp]);
+  }, [handleKeyDown, handleKeyUp, handleGlobalMouseUp]);
 
   // Release all notes when unmounting or changing instruments
   useEffect(() => {
@@ -378,13 +481,17 @@ function Keyboard({
             key={`white-${key.note}-${index}`}
             isActive={isActive}
             onPointerDown={() => {
-              handleKeyPress(key.note);
+              console.log("White key mouse down:", key.note);
+              handleMouseDownDirect(key.note);
             }}
-            onPointerUp={() => handleKeyRelease(key.note, "")}
+            onPointerUp={() => {
+              console.log("White key mouse up:", key.note);
+              handleMouseUpDirect();
+            }}
           />
         );
       });
-  }, [keys, activeKeys, handleKeyPress, handleKeyRelease]);
+  }, [keys, activeKeys, handleMouseDown, handleMouseUp]);
 
   const renderBlackKeys = useCallback(() => {
     const whiteKeyWidth = 100 / keys.filter((key) => !key.isSharp).length;
@@ -406,9 +513,13 @@ function Keyboard({
             position={position}
             width={whiteKeyWidth * 0.7}
             onPointerDown={() => {
-              handleKeyPress(key.note);
+              console.log("Black key mouse down:", key.note);
+              handleMouseDownDirect(key.note);
             }}
-            onPointerUp={() => handleKeyRelease(key.note, "")}
+            onPointerUp={() => {
+              console.log("Black key mouse up:", key.note);
+              handleMouseUpDirect();
+            }}
             onPointerEnter={() => {
               // Optional: Add hover behavior here if needed
             }}
@@ -418,7 +529,7 @@ function Keyboard({
           />
         );
       });
-  }, [keys, activeKeys, handleKeyPress, handleKeyRelease]);
+  }, [keys, activeKeys, handleMouseDown, handleMouseUp]);
 
   // Expose the playNote method to parent components via ref
   useImperativeHandle(ref, () => ({
