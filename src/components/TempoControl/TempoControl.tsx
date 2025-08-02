@@ -1,6 +1,6 @@
 import { MIN_TEMPO, MAX_TEMPO } from "../../constants";
 import * as Slider from "@radix-ui/react-slider";
-import styles from "./styles.module.css";
+import styles from "./tempo-control.module.css";
 
 type TempoControlProps = {
   tempo: number;
@@ -10,8 +10,11 @@ type TempoControlProps = {
 function TempoControl({ tempo, onTempoChange }: TempoControlProps) {
   return (
     <div className={styles.sliderContainer}>
-      <label className={styles.label}>Tempo: {tempo} bpm</label>
+      <label htmlFor="tempo-slider" className={styles.label}>
+        Tempo: {tempo} bpm
+      </label>
       <Slider.Root
+        id="tempo-slider"
         className={styles.sliderRoot}
         value={[tempo]}
         min={MIN_TEMPO}

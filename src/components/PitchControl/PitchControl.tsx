@@ -10,20 +10,23 @@ type PitchControlProps = {
 function PitchControl({ pitch, onPitchChange }: PitchControlProps) {
   return (
     <div className={styles.sliderContainer}>
-      <label className={styles.label}>Pitch {pitch} semitones</label>
-      <Slider.Root
-        className={styles.sliderRoot}
-        value={[pitch]}
-        min={MIN_PITCH_SHIFT}
-        max={MAX_PITCH_SHIFT}
-        step={1}
-        onValueChange={([value]) => onPitchChange(value)}
-      >
-        <Slider.Track className={styles.sliderTrack}>
-          <Slider.Range className={styles.sliderRange} />
-        </Slider.Track>
-        <Slider.Thumb className={styles.sliderThumb} />
-      </Slider.Root>
+      <label htmlFor="pitch-slider" className={styles.label}>
+        Pitch {pitch} semitones
+        <Slider.Root
+          id="pitch-slider"
+          className={styles.sliderRoot}
+          value={[pitch]}
+          min={MIN_PITCH_SHIFT}
+          max={MAX_PITCH_SHIFT}
+          step={1}
+          onValueChange={([value]) => onPitchChange(value)}
+        >
+          <Slider.Track className={styles.sliderTrack}>
+            <Slider.Range className={styles.sliderRange} />
+          </Slider.Track>
+          <Slider.Thumb className={styles.sliderThumb} />
+        </Slider.Root>
+      </label>
     </div>
   );
 }
