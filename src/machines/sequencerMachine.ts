@@ -137,16 +137,12 @@ export const sequencerMachine = setup({
   entry: assign({
     // Create the synth
     synth: () => {
-      console.log("Creating synth");
       const synth = new Tone.AMSynth(SYNTH_CONFIG);
-      console.log("Synth created");
       return synth;
     },
     // Create the noise synth for hi-hats
     noiseSynth: () => {
-      console.log("Creating noise synth for hi-hats");
       const noiseSynth = new Tone.NoiseSynth(HI_HAT_CONFIG);
-      console.log("Noise synth created");
       return noiseSynth;
     },
   }),
@@ -154,7 +150,6 @@ export const sequencerMachine = setup({
     stopped: {
       entry: [
         ({ context }) => {
-          console.log("Entering stopped state");
           if (context.sequence) {
             context.sequence.stop();
           }
@@ -185,9 +180,6 @@ export const sequencerMachine = setup({
             assign({
               rootNote: ({ event }) => event.note,
             }),
-            ({ event }) => {
-              console.log(`Root note changed to ${event.note}`);
-            },
           ],
         },
         UPDATE_TEMPO: {
@@ -239,11 +231,9 @@ export const sequencerMachine = setup({
           actions: [
             ({ context, event }) => {
               if (context.synth) {
-                console.log("Connecting synth to effects");
                 connectToEffects(context.synth, event.effectsContext);
               }
               if (context.noiseSynth) {
-                console.log("Connecting hi-hat to effects");
                 connectToEffects(context.noiseSynth, event.effectsContext);
               }
               return true;
@@ -260,14 +250,10 @@ export const sequencerMachine = setup({
     playing: {
       entry: [
         ({ context }) => {
-          console.log("Entering playing state");
           Tone.getTransport().bpm.value = context.tempo;
         },
         assign({
           sequence: ({ context }) => {
-            console.log(
-              `Creating sequence with root note: ${context.rootNote}`
-            );
 
             // Create a new sequence
             const seq = new Tone.Sequence(
@@ -387,9 +373,6 @@ export const sequencerMachine = setup({
             assign({
               rootNote: ({ event }) => event.note,
             }),
-            ({ event }) => {
-              console.log(`Root note changed to ${event.note} while playing`);
-            },
           ],
         },
         UPDATE_TEMPO: {
@@ -451,11 +434,9 @@ export const sequencerMachine = setup({
           actions: [
             ({ context, event }) => {
               if (context.synth) {
-                console.log("Connecting synth to effects");
                 connectToEffects(context.synth, event.effectsContext);
               }
               if (context.noiseSynth) {
-                console.log("Connecting hi-hat to effects");
                 connectToEffects(context.noiseSynth, event.effectsContext);
               }
               return true;

@@ -8,6 +8,26 @@
   --control-bg: hsl(0, 0%, 12%);
   --knob-size: 45px;
   --section-spacing: 0.75rem;
+  --touch-target-size: 44px;
+
+  /* Grid cell color tokens */
+  --grid-cell-hover: hsl(220, 13%, 40%);
+  --grid-cell-selected: hsl(220, 70%, 55%);
+
+  /* Button color tokens */
+  --button-bg: hsl(220, 70%, 55%);
+  --button-bg-hover: hsl(220, 70%, 60%);
+  --button-bg-active: hsl(220, 70%, 50%);
+}
+
+.container {
+  min-height: 100vh;
+  padding: 1rem;
+  background: var(--background-color);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sequencer {
@@ -18,13 +38,17 @@
   border: 1px solid hsl(0, 0%, 20%);
   display: flex;
   flex-direction: column;
-  gap: var(--section-spacing);
   max-width: 830px;
+  width: 100%;
+  touch-action: manipulation;
 }
 
 .sequencerControls {
   display: flex;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  padding-top: 1rem;
 }
 
 .controlsContainer {
@@ -36,35 +60,86 @@
   border: 1px solid hsl(0, 0%, 27%);
   margin-bottom: 0.25rem;
   justify-content: space-between;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 1200px) {
+/* Large screens */
+@media (min-width: 1200px) {
   .controlsContainer {
-    grid-template-columns: 1fr;
+    flex-direction: row;
   }
 
-  .effectsPanel {
-    grid-template-columns: 1fr;
+  .sequencerControls {
+    flex-direction: row;
   }
 }
 
-@media (max-width: 768px) {
+/* Small screens and mobile */
+@media (max-width: 865px) {
   :root {
     --knob-size: 35px;
+    --grid-cell-size: 28px;
+    --touch-target-size: 44px;
+  }
+
+  .container {
+    padding: 0.5rem;
   }
 
   .sequencer {
     padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .controlsContainer {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .sequencerControls {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
   }
 }
 
+/* Extra small screens */
 @media (max-width: 480px) {
   :root {
     --knob-size: 30px;
+    --grid-cell-size: 24px;
+    --touch-target-size: 44px;
+  }
+
+  .container {
+    padding: 0.25rem;
   }
 
   .sequencer {
     padding: 0.25rem;
+    gap: 0.25rem;
+  }
+
+  .controlsContainer {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .sequencerControls {
+    gap: 0.5rem;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-width: 767px) and (orientation: landscape) {
+  .sequencer {
+    max-width: 100%;
+  }
+
+  .controlsContainer {
+    flex-direction: row;
+    flex-wrap: wrap;
   }
 }
 
@@ -78,6 +153,7 @@
   background-color: hsl(220, 13%, 30%);
   transition: 0.4s;
   border-radius: 20px;
+  min-height: var(--touch-target-size);
 }
 
 .toggleSlider:before {
@@ -105,6 +181,8 @@ input:checked + .toggleSlider:before {
   justify-content: space-between;
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .tabsTrigger {
@@ -118,14 +196,32 @@ input:checked + .toggleSlider:before {
   user-select: none;
   display: flex;
   align-items: center;
-  /* gap: 0.15rem; */
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  min-height: var(--touch-target-size);
+  min-width: var(--touch-target-size);
 }
 
 .tabsTrigger:hover {
   color: var(--accent-color);
+  background-color: hsl(220, 13%, 25%);
 }
 
 .tabsTrigger[data-state="active"] {
   color: var(--accent-color);
   border-bottom: 2px solid var(--accent-color);
+}
+
+/* Mobile tab adjustments */
+@media (max-width: 767px) {
+  .tabsList {
+    justify-content: center;
+    gap: 0.25rem;
+  }
+
+  .tabsTrigger {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
 }

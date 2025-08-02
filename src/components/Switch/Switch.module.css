@@ -1,0 +1,64 @@
+.switchContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 4px;
+  padding: 4px 8px;
+}
+
+.switchRoot {
+  all: unset;
+  width: 42px;
+  height: 20px;
+  background-color: hsl(220, 13%, 30%);
+  border-radius: 30px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.switchRoot:hover {
+  background-color: var(--grid-cell-hover);
+}
+
+.switchRoot[data-state="checked"] {
+  background-color: var(--button-bg);
+}
+
+.switchRoot[data-state="checked"]:hover {
+  background-color: var(--button-bg-hover);
+}
+
+.switchRoot:focus-visible {
+  outline: 2px solid var(--button-bg);
+  outline-offset: 2px;
+}
+
+.switchRoot:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.switchThumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 9999px;
+  transition: transform 0.15s ease;
+  transform: translateX(2px);
+  will-change: transform;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.switchRoot[data-state="checked"] .switchThumb {
+  transform: translateX(20px);
+}
+
+.switchLabel {
+  color: var(--text-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+  user-select: none;
+}

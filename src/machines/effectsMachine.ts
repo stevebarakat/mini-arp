@@ -9,7 +9,7 @@ import {
 } from "../constants";
 
 // Define the types of effects we support
-export type EffectType = "autoFilter" | "delay" | "reverb" | "distortion";
+export type EffectType = "filter" | "delay" | "reverb" | "distortion";
 
 // Define the events that can be sent to the effects machine
 type EffectsEvent =
@@ -71,119 +71,477 @@ export type EffectsContext = {
   lastAutoFilterStartTime: number;
 };
 
-// Keep track of the timer ID to avoid multiple restarts
+// Timer management for autoFilter restarts
 let autoFilterRestartTimer: number | null = null;
 
-// Helper function to safely restart the autoFilter
-const safelyRestartAutoFilter = (autoFilter: Tone.AutoFilter | null) => {
-  if (!autoFilter) return;
-
-  // Clear any pending restart
+const clearAutoFilterRestartTimer = (): void => {
   if (autoFilterRestartTimer !== null) {
     clearTimeout(autoFilterRestartTimer);
     autoFilterRestartTimer = null;
   }
+};
 
-  // Stop the autoFilter if it's running
+const stopAutoFilterSafely = (autoFilter: Tone.AutoFilter | null): void => {
+  if (!autoFilter) return;
+
   try {
     autoFilter.stop();
-    console.log("AutoFilter stopped successfully");
   } catch {
-    console.log("AutoFilter was not running");
+    // AutoFilter was not running
   }
+};
 
-  // Schedule a restart with a delay
+const startAutoFilterAtNextTick = (
+  autoFilter: Tone.AutoFilter | null
+): void => {
+  if (!autoFilter) return;
+
+  try {
+    const now = Tone.now();
+    autoFilter.start(now + 0.1);
+  } catch {
+    // Error handling for autoFilter start
+  }
+};
+
+// Pure function to restart autoFilter with delay
+const restartAutoFilterWithDelay = (
+  autoFilter: Tone.AutoFilter | null
+): void => {
+  if (!autoFilter) return;
+
+  clearAutoFilterRestartTimer();
+  stopAutoFilterSafely(autoFilter);
+
   autoFilterRestartTimer = window.setTimeout(() => {
-    try {
-      if (autoFilter) {
-        // Use the current time plus a small offset to ensure it's in the future
-        const now = Tone.now();
-        autoFilter.start(now + 0.1);
-        console.log("AutoFilter restarted successfully at time", now + 0.1);
-      }
-    } catch (error) {
-      console.error("Error restarting autoFilter:", error);
-    }
+    startAutoFilterAtNextTick(autoFilter);
     autoFilterRestartTimer = null;
   }, 100);
 };
 
-// Helper function to ensure audio routing is properly connected
-const ensureAudioRouting = (context: EffectsContext) => {
+const createEffectsBusWithDestination = (): Tone.Channel => {
+  const effectsBus = new Tone.Channel().toDestination();
+  effectsBus.receive(EFFECTS_BUS);
+  Tone.Destination.volume.value = 0;
+  return effectsBus;
+};
+
+const createAutoFilterWithConfiguration = (): Tone.AutoFilter => {
+  const autoFilter = new Tone.AutoFilter({
+    frequency: FILTER_CONFIG.frequency,
+    type: FILTER_CONFIG.type,
+    depth: FILTER_CONFIG.depth,
+    baseFrequency: FILTER_CONFIG.baseFrequency,
+    octaves: FILTER_CONFIG.octaves,
+    filter: {
+      type: FILTER_CONFIG.filter.type,
+      rolloff: FILTER_CONFIG.filter.rolloff,
+      Q: FILTER_CONFIG.filter.Q,
+    },
+    wet: FILTER_CONFIG.wet,
+  });
+
+  const startTime = Tone.now() + 0.1;
+  autoFilter.start(startTime);
+
+  return autoFilter;
+};
+
+const createFeedbackDelayWithConfiguration = (): Tone.FeedbackDelay => {
+  return new Tone.FeedbackDelay({
+    delayTime: DELAY_CONFIG.delayTime,
+    feedback: DELAY_CONFIG.feedback,
+    wet: DELAY_CONFIG.wet,
+  });
+};
+
+const createReverbWithConfiguration = (): Tone.Reverb => {
+  return new Tone.Reverb({
+    decay: REVERB_CONFIG.decay,
+    preDelay: REVERB_CONFIG.preDelay,
+    wet: REVERB_CONFIG.wet,
+  });
+};
+
+const createDistortionWithConfiguration = (): Tone.Distortion => {
+  return new Tone.Distortion({
+    distortion: DISTORTION_CONFIG.distortion,
+    oversample: DISTORTION_CONFIG.oversample,
+    wet: DISTORTION_CONFIG.wet,
+  });
+};
+
+const createChannelSendersForAllEffects = (): Record<string, Tone.Channel> => ({
+  autoFilter: new Tone.Channel(),
+  delay: new Tone.Channel(),
+  reverb: new Tone.Channel(),
+  distortion: new Tone.Channel(),
+});
+
+const disposeAudioNodeSafely = (node: Tone.ToneAudioNode | null): void => {
+  if (node) {
+    try {
+      node.dispose();
+    } catch {
+      // Error handling for audio node disposal
+    }
+  }
+};
+
+// Pure function to disconnect an audio node
+const disconnectAudioNode = (node: Tone.ToneAudioNode | null): void => {
+  if (node) {
+    try {
+      node.disconnect();
+    } catch {
+      // Error handling for audio node disconnection
+    }
+  }
+};
+
+// Pure function to create audio routing components
+const createAudioRoutingComponents = () => {
+  const preGain = new Tone.Gain(0.89);
+  const limiter = new Tone.Limiter(-18);
+  const finalBus = new Tone.Gain(0.85);
+  const filterDistortionPath = new Tone.Gain();
+  const delayPath = new Tone.Gain();
+  const reverbPath = new Tone.Gain();
+
+  return {
+    preGain,
+    limiter,
+    finalBus,
+    filterDistortionPath,
+    delayPath,
+    reverbPath,
+  };
+};
+
+// Pure function to setup final audio chain
+const setupFinalAudioChain = (
+  finalBus: Tone.Gain,
+  preGain: Tone.Gain,
+  limiter: Tone.Limiter
+): void => {
+  finalBus.chain(preGain, limiter, Tone.Destination);
+};
+
+// Pure function to connect effects to paths
+const connectEffectsToPaths = (
+  context: EffectsContext,
+  components: ReturnType<typeof createAudioRoutingComponents>
+): void => {
+  const { filterDistortionPath, delayPath, reverbPath, finalBus } = components;
+
+  // Path 1: AutoFilter -> Distortion path
+  if (context.autoFilter && context.distortion) {
+    filterDistortionPath.chain(
+      context.autoFilter,
+      context.distortion,
+      finalBus
+    );
+  } else if (context.autoFilter) {
+    filterDistortionPath.chain(context.autoFilter, finalBus);
+  } else if (context.distortion) {
+    filterDistortionPath.chain(context.distortion, finalBus);
+  } else {
+    filterDistortionPath.connect(finalBus);
+  }
+
+  // Path 2: Clean delay path
+  if (context.delay) {
+    delayPath.chain(context.delay, finalBus);
+  } else {
+    delayPath.connect(finalBus);
+  }
+
+  // Path 3: Clean reverb path
+  if (context.reverb) {
+    reverbPath.chain(context.reverb, finalBus);
+  } else {
+    reverbPath.connect(finalBus);
+  }
+};
+
+// Pure function to ensure audio routing is properly connected
+const ensureAudioRouting = (context: EffectsContext): boolean => {
   if (!context.effectsBus) {
     console.warn("Effects bus not available for routing");
     return false;
   }
 
-  let routingSuccess = true;
-
   try {
     // Disconnect all effects first
-    if (context.autoFilter) context.autoFilter.disconnect();
-    if (context.delay) context.delay.disconnect();
-    if (context.reverb) context.reverb.disconnect();
-    if (context.distortion) context.distortion.disconnect();
-    if (context.effectsBus) context.effectsBus.disconnect();
+    disconnectAudioNode(context.autoFilter);
+    disconnectAudioNode(context.delay);
+    disconnectAudioNode(context.reverb);
+    disconnectAudioNode(context.distortion);
+    disconnectAudioNode(context.effectsBus);
 
-    // Create a more aggressive limiter setup
-    const preGain = new Tone.Gain(0.89); // Drive the input signal harder
-    const limiter = new Tone.Limiter(-18); // Lower threshold for more aggressive limiting
-    const finalBus = new Tone.Gain(0.85); // Boost the final output
-
-    // Chain the final bus through the drive -> limiter -> destination
-    finalBus.chain(preGain, limiter, Tone.Destination);
-
-    // Create three parallel paths
-    const filterDistortionPath = new Tone.Gain();
-    const delayPath = new Tone.Gain();
-    const reverbPath = new Tone.Gain();
+    const components = createAudioRoutingComponents();
+    setupFinalAudioChain(
+      components.finalBus,
+      components.preGain,
+      components.limiter
+    );
 
     // Connect input to all paths
-    context.effectsBus.connect(filterDistortionPath);
-    context.effectsBus.connect(delayPath);
-    context.effectsBus.connect(reverbPath);
+    context.effectsBus.connect(components.filterDistortionPath);
+    context.effectsBus.connect(components.delayPath);
+    context.effectsBus.connect(components.reverbPath);
 
-    // Path 1: AutoFilter -> Distortion path
-    if (context.autoFilter && context.distortion) {
-      filterDistortionPath.chain(
-        context.autoFilter,
-        context.distortion,
-        finalBus
-      );
-      console.log("Connected autoFilter -> distortion path");
-    } else if (context.autoFilter) {
-      filterDistortionPath.chain(context.autoFilter, finalBus);
-      console.log("Connected autoFilter path only");
-    } else if (context.distortion) {
-      filterDistortionPath.chain(context.distortion, finalBus);
-      console.log("Connected distortion path only");
-    } else {
-      filterDistortionPath.connect(finalBus);
-    }
+    connectEffectsToPaths(context, components);
 
-    // Path 2: Clean delay path
-    if (context.delay) {
-      delayPath.chain(context.delay, finalBus);
-      console.log("Connected clean delay path");
-    } else {
-      delayPath.connect(finalBus);
-    }
-
-    // Path 3: Clean reverb path
-    if (context.reverb) {
-      reverbPath.chain(context.reverb, finalBus);
-      console.log("Connected clean reverb path");
-    } else {
-      reverbPath.connect(finalBus);
-    }
-
-    console.log("Added parallel processing paths with shared limiter");
+    return true;
   } catch (error) {
     console.error("Error connecting effects:", error);
-    routingSuccess = false;
+    return false;
+  }
+};
+
+// Pure function to update filter frequency
+const updateFilterFrequency = (
+  autoFilter: Tone.AutoFilter | null,
+  frequency: number
+): void => {
+  if (!autoFilter) {
+    console.warn("Auto-filter not available for frequency update");
+    return;
   }
 
-  return routingSuccess;
+  try {
+    autoFilter.frequency.value = frequency;
+    restartAutoFilterWithDelay(autoFilter);
+  } catch (error) {
+    console.error("Error updating filter frequency:", error);
+  }
+};
+
+// Pure function to update filter depth
+const updateFilterDepth = (
+  autoFilter: Tone.AutoFilter | null,
+  depth: number
+): void => {
+  if (!autoFilter) {
+    console.warn("Auto-filter not available for depth update");
+    return;
+  }
+
+  try {
+    autoFilter.depth.value = depth;
+    restartAutoFilterWithDelay(autoFilter);
+  } catch (error) {
+    console.error("Error updating filter depth:", error);
+  }
+};
+
+// Pure function to update filter wet mix
+const updateFilterWet = (
+  autoFilter: Tone.AutoFilter | null,
+  wet: number
+): void => {
+  if (!autoFilter) {
+    console.warn("Auto-filter not available for wet mix update");
+    return;
+  }
+
+  try {
+    autoFilter.wet.value = wet;
+  } catch (error) {
+    console.error("Error updating filter wet mix:", error);
+  }
+};
+
+// Pure function to update filter resonance
+const updateFilterResonance = (
+  autoFilter: Tone.AutoFilter | null,
+  resonance: number
+): void => {
+  if (!autoFilter) {
+    console.warn("Auto-filter not available for resonance update");
+    return;
+  }
+
+  try {
+    autoFilter.filter.Q.value = resonance;
+  } catch (error) {
+    console.error("Error updating filter resonance:", error);
+  }
+};
+
+// Pure function to update delay time
+const updateDelayTime = (
+  delay: Tone.FeedbackDelay | null,
+  delayTime: number
+): void => {
+  if (!delay) {
+    console.warn("Delay effect not available for time update");
+    return;
+  }
+
+  try {
+    delay.delayTime.value = delayTime;
+  } catch (error) {
+    console.error("Error updating delay time:", error);
+  }
+};
+
+// Pure function to update delay feedback
+const updateDelayFeedback = (
+  delay: Tone.FeedbackDelay | null,
+  feedback: number
+): void => {
+  if (!delay) {
+    console.warn("Delay effect not available for feedback update");
+    return;
+  }
+
+  try {
+    delay.feedback.value = feedback;
+  } catch (error) {
+    console.error("Error updating delay feedback:", error);
+  }
+};
+
+// Pure function to update delay wet mix
+const updateDelayWet = (
+  delay: Tone.FeedbackDelay | null,
+  wet: number
+): void => {
+  if (!delay) {
+    console.warn("Delay effect not available for wet mix update");
+    return;
+  }
+
+  try {
+    delay.wet.value = wet;
+  } catch (error) {
+    console.error("Error updating delay wet mix:", error);
+  }
+};
+
+// Pure function to update reverb decay
+const updateReverbDecay = (reverb: Tone.Reverb | null, decay: number): void => {
+  if (!reverb) {
+    console.warn("Reverb effect not available for decay update");
+    return;
+  }
+
+  try {
+    reverb.decay = decay;
+  } catch (error) {
+    console.error("Error updating reverb decay:", error);
+  }
+};
+
+// Pure function to update reverb pre-delay
+const updateReverbPreDelay = (
+  reverb: Tone.Reverb | null,
+  preDelay: number
+): void => {
+  if (!reverb) {
+    console.warn("Reverb effect not available for pre-delay update");
+    return;
+  }
+
+  try {
+    reverb.preDelay = preDelay;
+  } catch (error) {
+    console.error("Error updating reverb pre-delay:", error);
+  }
+};
+
+// Pure function to update reverb wet mix
+const updateReverbWet = (reverb: Tone.Reverb | null, wet: number): void => {
+  if (!reverb) {
+    console.warn("Reverb effect not available for wet mix update");
+    return;
+  }
+
+  try {
+    reverb.wet.value = wet;
+  } catch (error) {
+    console.error("Error updating reverb wet mix:", error);
+  }
+};
+
+// Pure function to update distortion amount
+const updateDistortionAmount = (
+  distortion: Tone.Distortion | null,
+  distortionAmount: number
+): void => {
+  if (!distortion) {
+    console.warn("Distortion effect not available for amount update");
+    return;
+  }
+
+  try {
+    distortion.distortion = distortionAmount;
+  } catch (error) {
+    console.error("Error updating distortion amount:", error);
+  }
+};
+
+// Pure function to update distortion wet mix
+const updateDistortionWet = (
+  distortion: Tone.Distortion | null,
+  wet: number
+): void => {
+  if (!distortion) {
+    console.warn("Distortion effect not available for wet mix update");
+    return;
+  }
+
+  try {
+    distortion.wet.value = wet;
+  } catch (error) {
+    console.error("Error updating distortion wet mix:", error);
+  }
+};
+
+// Pure function to toggle effect wet values
+const toggleEffectWet = (
+  effect: EffectType,
+  enabled: boolean,
+  context: EffectsContext
+): void => {
+  switch (effect) {
+    case "autoFilter":
+      if (context.autoFilter) {
+        context.autoFilter.wet.value = enabled ? context.filterWet : 0;
+      }
+      break;
+    case "delay":
+      if (context.delay) {
+        context.delay.wet.value = enabled ? context.delayWet : 0;
+      }
+      break;
+    case "reverb":
+      if (context.reverb) {
+        context.reverb.wet.value = enabled ? context.reverbWet : 0;
+      }
+      break;
+    case "distortion":
+      if (context.distortion) {
+        context.distortion.distortion = enabled ? context.distortionAmount : 0;
+      }
+      break;
+  }
+};
+
+// Pure function to update active effects list
+const updateActiveEffects = (
+  currentActiveEffects: EffectType[],
+  effect: EffectType,
+  enabled: boolean
+): EffectType[] => {
+  if (enabled && !currentActiveEffects.includes(effect)) {
+    return [...currentActiveEffects, effect];
+  } else if (!enabled && currentActiveEffects.includes(effect)) {
+    return currentActiveEffects.filter((e) => e !== effect);
+  }
+  return currentActiveEffects;
 };
 
 // Create the effects machine
@@ -223,146 +581,18 @@ export const effectsMachine = setup({
         INIT_EFFECTS: {
           target: "active",
           actions: assign({
-            // Create the effects bus
-            effectsBus: () => {
-              console.log(`Creating effects bus with name "${EFFECTS_BUS}"`);
-
-              // Create a channel for the effects bus and connect it to the destination
-              const effectsBus = new Tone.Channel().toDestination();
-
-              // Register the channel as a receive point for the named bus
-              effectsBus.receive(EFFECTS_BUS);
-
-              // Set destination volume
-              Tone.Destination.volume.value = 0;
-
-              console.log(
-                `Effects bus created and receiving on "${EFFECTS_BUS}"`
-              );
-
-              return effectsBus;
-            },
-
-            // Create the autoFilter
-            autoFilter: () => {
-              console.log("Creating auto-filter with config:", FILTER_CONFIG);
-
-              // Create the auto filter effect with proper configuration
-              const autoFilter = new Tone.AutoFilter({
-                frequency: FILTER_CONFIG.frequency,
-                type: FILTER_CONFIG.type,
-                depth: FILTER_CONFIG.depth,
-                baseFrequency: FILTER_CONFIG.baseFrequency,
-                octaves: FILTER_CONFIG.octaves,
-                filter: {
-                  type: FILTER_CONFIG.filter.type,
-                  rolloff: FILTER_CONFIG.filter.rolloff,
-                  Q: FILTER_CONFIG.filter.Q,
-                },
-                wet: FILTER_CONFIG.wet,
-              });
-
-              // Important: Start the LFO with a specific time
-              const startTime = Tone.now() + 0.1;
-              autoFilter.start(startTime);
-
-              console.log("Auto-filter created with params:", {
-                frequency: autoFilter.frequency.value,
-                depth: autoFilter.depth.value,
-                wet: autoFilter.wet.value,
-                resonance: autoFilter.filter.Q.value,
-                startTime: startTime,
-              });
-
-              return autoFilter;
-            },
-
-            // Create the delay effect
-            delay: () => {
-              console.log("Creating delay effect with config:", DELAY_CONFIG);
-
-              // Create the delay effect with proper configuration
-              const delay = new Tone.FeedbackDelay({
-                delayTime: DELAY_CONFIG.delayTime,
-                feedback: DELAY_CONFIG.feedback,
-                wet: DELAY_CONFIG.wet,
-              });
-
-              console.log("Delay effect created with params:", {
-                delayTime: delay.delayTime.value,
-                feedback: delay.feedback.value,
-                wet: delay.wet.value,
-              });
-
-              return delay;
-            },
-
-            // Create the reverb effect
-            reverb: () => {
-              console.log("Creating reverb effect with config:", REVERB_CONFIG);
-
-              // Create the reverb effect with proper configuration
-              const reverb = new Tone.Reverb({
-                decay: REVERB_CONFIG.decay,
-                preDelay: REVERB_CONFIG.preDelay,
-                wet: REVERB_CONFIG.wet,
-              });
-
-              console.log("Reverb effect created with params:", {
-                decay: reverb.decay,
-                preDelay: reverb.preDelay,
-                wet: reverb.wet.value,
-              });
-
-              return reverb;
-            },
-
-            // Create the distortion effect
-            distortion: () => {
-              console.log(
-                "Creating distortion effect with config:",
-                DISTORTION_CONFIG
-              );
-
-              // Create the distortion effect with proper configuration
-              const distortion = new Tone.Distortion({
-                distortion: DISTORTION_CONFIG.distortion,
-                oversample: DISTORTION_CONFIG.oversample,
-                wet: DISTORTION_CONFIG.wet,
-              });
-
-              console.log("Distortion effect created with params:", {
-                distortion: distortion.distortion,
-                oversample: distortion.oversample,
-                wet: distortion.wet.value,
-              });
-
-              return distortion;
-            },
-
-            // Create channel senders for each effect
-            channelSenders: () => {
-              console.log("Creating channel senders for effects routing");
-
-              const senders: Record<string, Tone.Channel> = {
-                autoFilter: new Tone.Channel(),
-                delay: new Tone.Channel(),
-                reverb: new Tone.Channel(),
-                distortion: new Tone.Channel(),
-              };
-
-              return senders;
-            },
-
-            // Update active effects
+            effectsBus: createEffectsBusWithDestination,
+            autoFilter: createAutoFilterWithConfiguration,
+            delay: createFeedbackDelayWithConfiguration,
+            reverb: createReverbWithConfiguration,
+            distortion: createDistortionWithConfiguration,
+            channelSenders: createChannelSendersForAllEffects,
             activeEffects: () => [
               "autoFilter",
               "delay",
               "reverb",
               "distortion",
             ],
-
-            // Set the initial start time
             lastAutoFilterStartTime: () => Tone.now(),
           }),
         },
@@ -370,7 +600,6 @@ export const effectsMachine = setup({
     },
     active: {
       entry: ({ context }) => {
-        // Ensure all effects are properly connected
         ensureAudioRouting(context);
       },
       on: {
@@ -378,49 +607,32 @@ export const effectsMachine = setup({
           target: "inactive",
           actions: assign({
             effectsBus: ({ context }) => {
-              if (context.effectsBus) {
-                context.effectsBus.dispose();
-              }
+              disposeAudioNodeSafely(context.effectsBus);
               return null;
             },
             autoFilter: ({ context }) => {
               if (context.autoFilter) {
-                // Make sure to stop before disposing
-                try {
-                  context.autoFilter.stop();
-                } catch {
-                  console.log("No need to stop autoFilter, it wasn't running");
-                }
-                context.autoFilter.dispose();
+                stopAutoFilterSafely(context.autoFilter);
+                disposeAudioNodeSafely(context.autoFilter);
               }
               return null;
             },
             delay: ({ context }) => {
-              if (context.delay) {
-                context.delay.dispose();
-                console.log("Delay effect disposed");
-              }
+              disposeAudioNodeSafely(context.delay);
               return null;
             },
             reverb: ({ context }) => {
-              if (context.reverb) {
-                context.reverb.dispose();
-                console.log("Reverb effect disposed");
-              }
+              disposeAudioNodeSafely(context.reverb);
               return null;
             },
             distortion: ({ context }) => {
-              if (context.distortion) {
-                context.distortion.dispose();
-                console.log("Distortion effect disposed");
-              }
+              disposeAudioNodeSafely(context.distortion);
               return null;
             },
             channelSenders: ({ context }) => {
-              // Dispose all channel senders
-              Object.values(context.channelSenders).forEach((sender) => {
-                sender.dispose();
-              });
+              Object.values(context.channelSenders).forEach(
+                disposeAudioNodeSafely
+              );
               return {};
             },
             activeEffects: () => [],
@@ -430,25 +642,8 @@ export const effectsMachine = setup({
         UPDATE_FILTER_FREQUENCY: {
           actions: assign({
             filterFrequency: ({ event, context }) => {
-              if (context.autoFilter) {
-                try {
-                  // Set the frequency value and log it
-                  context.autoFilter.frequency.value = event.frequency;
-                  console.log(
-                    `Updated filter frequency to ${event.frequency}Hz`
-                  );
-
-                  // Safely restart the autoFilter
-                  safelyRestartAutoFilter(context.autoFilter);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating filter frequency:", error);
-                }
-              } else {
-                console.warn("Auto-filter not available for frequency update");
-              }
+              updateFilterFrequency(context.autoFilter, event.frequency);
+              ensureAudioRouting(context);
               return event.frequency;
             },
           }),
@@ -456,23 +651,8 @@ export const effectsMachine = setup({
         UPDATE_FILTER_DEPTH: {
           actions: assign({
             filterDepth: ({ event, context }) => {
-              if (context.autoFilter) {
-                try {
-                  // Set the depth value and log it
-                  context.autoFilter.depth.value = event.depth;
-                  console.log(`Updated filter depth to ${event.depth}`);
-
-                  // Safely restart the autoFilter
-                  safelyRestartAutoFilter(context.autoFilter);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating filter depth:", error);
-                }
-              } else {
-                console.warn("Auto-filter not available for depth update");
-              }
+              updateFilterDepth(context.autoFilter, event.depth);
+              ensureAudioRouting(context);
               return event.depth;
             },
           }),
@@ -480,20 +660,8 @@ export const effectsMachine = setup({
         UPDATE_FILTER_WET: {
           actions: assign({
             filterWet: ({ event, context }) => {
-              if (context.autoFilter) {
-                try {
-                  // Set the wet value and log it
-                  context.autoFilter.wet.value = event.wet;
-                  console.log(`Updated filter wet mix to ${event.wet}`);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating filter wet mix:", error);
-                }
-              } else {
-                console.warn("Auto-filter not available for wet mix update");
-              }
+              updateFilterWet(context.autoFilter, event.wet);
+              ensureAudioRouting(context);
               return event.wet;
             },
           }),
@@ -501,20 +669,8 @@ export const effectsMachine = setup({
         UPDATE_FILTER_RESONANCE: {
           actions: assign({
             filterResonance: ({ event, context }) => {
-              if (context.autoFilter) {
-                try {
-                  // Set the resonance (Q) value and log it
-                  context.autoFilter.filter.Q.value = event.resonance;
-                  console.log(`Updated filter resonance to ${event.resonance}`);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating filter resonance:", error);
-                }
-              } else {
-                console.warn("Auto-filter not available for resonance update");
-              }
+              updateFilterResonance(context.autoFilter, event.resonance);
+              ensureAudioRouting(context);
               return event.resonance;
             },
           }),
@@ -522,20 +678,8 @@ export const effectsMachine = setup({
         UPDATE_DELAY_TIME: {
           actions: assign({
             delayTime: ({ event, context }) => {
-              if (context.delay) {
-                try {
-                  // Set the delay time value and log it
-                  context.delay.delayTime.value = event.delayTime;
-                  console.log(`Updated delay time to ${event.delayTime}s`);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating delay time:", error);
-                }
-              } else {
-                console.warn("Delay effect not available for time update");
-              }
+              updateDelayTime(context.delay, event.delayTime);
+              ensureAudioRouting(context);
               return event.delayTime;
             },
           }),
@@ -543,20 +687,8 @@ export const effectsMachine = setup({
         UPDATE_DELAY_FEEDBACK: {
           actions: assign({
             delayFeedback: ({ event, context }) => {
-              if (context.delay) {
-                try {
-                  // Set the feedback value and log it
-                  context.delay.feedback.value = event.feedback;
-                  console.log(`Updated delay feedback to ${event.feedback}`);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating delay feedback:", error);
-                }
-              } else {
-                console.warn("Delay effect not available for feedback update");
-              }
+              updateDelayFeedback(context.delay, event.feedback);
+              ensureAudioRouting(context);
               return event.feedback;
             },
           }),
@@ -564,20 +696,8 @@ export const effectsMachine = setup({
         UPDATE_DELAY_WET: {
           actions: assign({
             delayWet: ({ event, context }) => {
-              if (context.delay) {
-                try {
-                  // Set the wet value and log it
-                  context.delay.wet.value = event.wet;
-                  console.log(`Updated delay wet mix to ${event.wet}`);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating delay wet mix:", error);
-                }
-              } else {
-                console.warn("Delay effect not available for wet mix update");
-              }
+              updateDelayWet(context.delay, event.wet);
+              ensureAudioRouting(context);
               return event.wet;
             },
           }),
@@ -585,20 +705,8 @@ export const effectsMachine = setup({
         UPDATE_REVERB_DECAY: {
           actions: assign({
             reverbDecay: ({ event, context }) => {
-              if (context.reverb) {
-                try {
-                  // Set the decay value and log it
-                  context.reverb.decay = event.decay;
-                  console.log(`Updated reverb decay to ${event.decay}s`);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating reverb decay:", error);
-                }
-              } else {
-                console.warn("Reverb effect not available for decay update");
-              }
+              updateReverbDecay(context.reverb, event.decay);
+              ensureAudioRouting(context);
               return event.decay;
             },
           }),
@@ -606,22 +714,8 @@ export const effectsMachine = setup({
         UPDATE_REVERB_PREDELAY: {
           actions: assign({
             reverbPreDelay: ({ event, context }) => {
-              if (context.reverb) {
-                try {
-                  // Set the preDelay value and log it
-                  context.reverb.preDelay = event.preDelay;
-                  console.log(`Updated reverb pre-delay to ${event.preDelay}s`);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating reverb pre-delay:", error);
-                }
-              } else {
-                console.warn(
-                  "Reverb effect not available for pre-delay update"
-                );
-              }
+              updateReverbPreDelay(context.reverb, event.preDelay);
+              ensureAudioRouting(context);
               return event.preDelay;
             },
           }),
@@ -629,20 +723,8 @@ export const effectsMachine = setup({
         UPDATE_REVERB_WET: {
           actions: assign({
             reverbWet: ({ event, context }) => {
-              if (context.reverb) {
-                try {
-                  // Set the wet value and log it
-                  context.reverb.wet.value = event.wet;
-                  console.log(`Updated reverb wet mix to ${event.wet}`);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating reverb wet mix:", error);
-                }
-              } else {
-                console.warn("Reverb effect not available for wet mix update");
-              }
+              updateReverbWet(context.reverb, event.wet);
+              ensureAudioRouting(context);
               return event.wet;
             },
           }),
@@ -650,24 +732,8 @@ export const effectsMachine = setup({
         UPDATE_DISTORTION_AMOUNT: {
           actions: assign({
             distortionAmount: ({ event, context }) => {
-              if (context.distortion) {
-                try {
-                  // Set the distortion value and log it
-                  context.distortion.distortion = event.distortion;
-                  console.log(
-                    `Updated distortion amount to ${event.distortion}`
-                  );
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating distortion amount:", error);
-                }
-              } else {
-                console.warn(
-                  "Distortion effect not available for amount update"
-                );
-              }
+              updateDistortionAmount(context.distortion, event.distortion);
+              ensureAudioRouting(context);
               return event.distortion;
             },
           }),
@@ -675,22 +741,8 @@ export const effectsMachine = setup({
         UPDATE_DISTORTION_WET: {
           actions: assign({
             distortionWet: ({ event, context }) => {
-              if (context.distortion) {
-                try {
-                  // Set the wet value and log it
-                  context.distortion.wet.value = event.wet;
-                  console.log(`Updated distortion wet mix to ${event.wet}`);
-
-                  // Ensure audio routing is properly connected
-                  ensureAudioRouting(context);
-                } catch (error) {
-                  console.error("Error updating distortion wet mix:", error);
-                }
-              } else {
-                console.warn(
-                  "Distortion effect not available for wet mix update"
-                );
-              }
+              updateDistortionWet(context.distortion, event.wet);
+              ensureAudioRouting(context);
               return event.wet;
             },
           }),
@@ -698,48 +750,14 @@ export const effectsMachine = setup({
         TOGGLE_EFFECT: {
           actions: assign({
             activeEffects: ({ event, context }) => {
-              const { effect, enabled } = event;
-              const currentActiveEffects = [...context.activeEffects];
-
-              if (enabled && !currentActiveEffects.includes(effect)) {
-                // Add the effect to active effects
-                console.log(`Enabling effect: ${effect}`);
-                currentActiveEffects.push(effect);
-                if (effect === "autoFilter" && context.autoFilter) {
-                  context.autoFilter.wet.value = context.filterWet;
-                }
-                if (effect === "delay" && context.delay) {
-                  context.delay.wet.value = context.delayWet;
-                }
-                if (effect === "reverb" && context.reverb) {
-                  context.reverb.wet.value = context.reverbWet;
-                }
-                if (effect === "distortion" && context.distortion) {
-                  context.distortion.distortion = context.distortionAmount;
-                }
-              } else if (!enabled && currentActiveEffects.includes(effect)) {
-                // Remove the effect from active effects
-                console.log(`Disabling effect: ${effect}`);
-                const index = currentActiveEffects.indexOf(effect);
-                currentActiveEffects.splice(index, 1);
-                if (effect === "autoFilter" && context.autoFilter) {
-                  context.autoFilter.wet.value = 0;
-                }
-                if (effect === "delay" && context.delay) {
-                  context.delay.wet.value = 0;
-                }
-                if (effect === "reverb" && context.reverb) {
-                  context.reverb.wet.value = 0;
-                }
-                if (effect === "distortion" && context.distortion) {
-                  context.distortion.distortion = 0;
-                }
-              }
-
-              // Ensure audio routing is properly connected
+              const newActiveEffects = updateActiveEffects(
+                context.activeEffects,
+                event.effect,
+                event.enabled
+              );
+              toggleEffectWet(event.effect, event.enabled, context);
               ensureAudioRouting(context);
-
-              return currentActiveEffects;
+              return newActiveEffects;
             },
           }),
         },
@@ -748,63 +766,48 @@ export const effectsMachine = setup({
   },
 });
 
-// Helper function to connect an instrument to the effects chain
+// Pure function to connect an instrument to the effects chain
 export const connectToEffects = (
   instrument: Tone.ToneAudioNode,
   context: EffectsContext
-) => {
+): void => {
   if (!context.effectsBus) {
     console.warn("Effects bus not available for routing");
     instrument.toDestination();
     return;
   }
 
-  console.log("Connecting instrument to parallel effects chains");
-
   // Disconnect the instrument from any existing connections
   instrument.disconnect();
 
-  // Create a split point for parallel routing
+  // Create a splitter for parallel routing
   const splitter = new Tone.Gain();
   instrument.connect(splitter);
 
-  // Connect to each active effect in parallel
-  const activeEffects = context.activeEffects;
+  const { activeEffects } = context;
 
-  // Connect to autoFilter if active
+  // Connect to active effects in parallel
   if (activeEffects.includes("autoFilter") && context.autoFilter) {
-    console.log("Connecting instrument to autoFilter");
     splitter.connect(context.autoFilter);
   }
 
-  // Connect to delay if active
   if (activeEffects.includes("delay") && context.delay) {
-    console.log("Connecting instrument to delay");
     splitter.connect(context.delay);
   }
 
-  // Connect to reverb if active
   if (activeEffects.includes("reverb") && context.reverb) {
-    console.log("Connecting instrument to reverb");
     splitter.connect(context.reverb);
   }
 
-  // Connect to distortion if active
   if (activeEffects.includes("distortion") && context.distortion) {
-    console.log("Connecting instrument to distortion");
     splitter.connect(context.distortion);
   }
 
   // If no effects are active, connect directly to destination
   if (activeEffects.length === 0) {
-    console.log(
-      "No active effects, connecting instrument directly to destination"
-    );
     splitter.toDestination();
   }
 
   // Ensure the effects chain is properly connected
   ensureAudioRouting(context);
-
-  console.log("Instrument connected to effects chains");
 };

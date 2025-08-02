@@ -1,6 +1,5 @@
 import { EFFECT_PARAM_RANGES } from "../../constants";
 import Knob from "../Knob";
-import "@/styles/effects.css";
 
 type DistortionControlProps = {
   distortion: number;

@@ -1,7 +1,29 @@
 .button {
   padding: 10px 20px;
-  background-color: var(--co);
+  background-color: var(--button-bg);
   color: #fff;
   border: none;
   border-radius: 5px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: var(--button-bg-hover);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 767px) {
+  .button {
+    padding: 8px 16px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .button {
+    padding: 6px 12px;
+    font-size: 0.625rem;
+  }
 }

@@ -3,13 +3,15 @@ import React, {
   useEffect,
   useCallback,
   useImperativeHandle,
+  useMemo,
 } from "react";
 import * as Tone from "tone";
 import { INSTRUMENT_TYPES } from "../../constants";
 import styles from "./Keyboard.module.css";
-import Button from "../Button";
+import { WhiteKey, BlackKey } from "./KeyboardKey";
+import KeyboardControls from "./KeyboardControls";
 
-interface SharedKeyboardProps {
+type KeyboardProps = {
   activeKeys?: string[];
   octaveRange?: { min: number; max: number };
   onKeyClick?: (note: string) => void;
@@ -17,15 +19,28 @@ interface SharedKeyboardProps {
   ref?: React.RefObject<{
     playNote: (note: string) => void;
   }>;
-}
+};
 
-const Keyboard = ({
+// Keyboard mapping for QWERTY layout (common in music apps)
+// Note: This is now generated dynamically based on current octave
+
+// Octave control keys
+const OCTAVE_CONTROLS: { [key: string]: "increment" | "decrement" } = {
+  "=": "increment",
+  "+": "increment",
+  "-": "decrement",
+  _: "decrement",
+  z: "decrement",
+  x: "increment",
+};
+
+function Keyboard({
   activeKeys = [],
   octaveRange = { min: 4, max: 5 },
   onKeyClick = () => {},
   instrumentType = INSTRUMENT_TYPES.SYNTH,
   ref,
-}: SharedKeyboardProps) => {
+}: KeyboardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [instrument, setInstrument] = useState<Tone.PolySynth | null>(null);
   const [currentInstrumentType, setCurrentInstrumentType] =
@@ -36,37 +51,46 @@ const Keyboard = ({
   // Keep track of currently playing notes
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
 
-  // Define notes for one octave in order (important for layout)
-  const octave = [
-    { note: "C", isSharp: false },
-    { note: "C#", isSharp: true },
-    { note: "D", isSharp: false },
-    { note: "D#", isSharp: true },
-    { note: "E", isSharp: false },
-    { note: "F", isSharp: false },
-    { note: "F#", isSharp: true },
-    { note: "G", isSharp: false },
-    { note: "G#", isSharp: true },
-    { note: "A", isSharp: false },
-    { note: "A#", isSharp: true },
-    { note: "B", isSharp: false },
-  ];
+  // Keep track of computer keyboard pressed keys
+  const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
+
+  // Current octave for keyboard mapping
+  const [currentOctave, setCurrentOctave] = useState(4);
 
   // Create a keyboard with the specified octave range
-  const keys: { note: string; isSharp: boolean }[] = [];
-  for (let o = octaveRange.min; o <= octaveRange.max; o++) {
-    octave.forEach((key) => {
-      const note = `${key.note}${o}`;
-      // Only include notes from G3 to C5
-      const noteValue = Tone.Frequency(note).toMidi();
-      const g3Value = Tone.Frequency("G3").toMidi();
-      const c5Value = Tone.Frequency("C6").toMidi();
+  const keys = useMemo(() => {
+    // Define notes for one octave in order (important for layout)
+    const octave = [
+      { note: "C", isSharp: false },
+      { note: "C#", isSharp: true },
+      { note: "D", isSharp: false },
+      { note: "D#", isSharp: true },
+      { note: "E", isSharp: false },
+      { note: "F", isSharp: false },
+      { note: "F#", isSharp: true },
+      { note: "G", isSharp: false },
+      { note: "G#", isSharp: true },
+      { note: "A", isSharp: false },
+      { note: "A#", isSharp: true },
+      { note: "B", isSharp: false },
+    ];
 
-      if (noteValue >= g3Value && noteValue <= c5Value) {
-        keys.push({ note, isSharp: key.isSharp });
-      }
-    });
-  }
+    const keysArray: { note: string; isSharp: boolean }[] = [];
+    for (let o = octaveRange.min; o <= octaveRange.max; o++) {
+      octave.forEach((key) => {
+        const note = `${key.note}${o}`;
+        // Only include notes from G3 to C5
+        const noteValue = Tone.Frequency(note).toMidi();
+        const g3Value = Tone.Frequency("G3").toMidi();
+        const c5Value = Tone.Frequency("C6").toMidi();
+
+        if (noteValue >= g3Value && noteValue <= c5Value) {
+          keysArray.push({ note, isSharp: key.isSharp });
+        }
+      });
+    }
+    return keysArray;
+  }, [octaveRange.min, octaveRange.max]);
 
   // Update current instrument type when prop changes
   useEffect(() => {
@@ -116,8 +140,12 @@ const Keyboard = ({
             onKeyClick(note);
           }
         } else {
-          // In non-sticky mode, just trigger the callback and set active note
-          setActiveNotes(new Set([note]));
+          // In non-sticky mode, add the note to active notes
+          setActiveNotes((prev) => {
+            const next = new Set(prev);
+            next.add(note);
+            return next;
+          });
           onKeyClick(note);
         }
       } catch (e) {
@@ -129,21 +157,130 @@ const Keyboard = ({
 
   // Handle key release
   const handleKeyRelease = useCallback(
-    (note: string) => {
+    (note: string, key: string) => {
       if (!instrument || !isLoaded) return;
 
       try {
         // Only release if this note is actually active and we're not in sticky mode
         if (activeNotes.has(note) && !isStickyKeys) {
-          setActiveNotes(new Set());
-          onKeyClick("");
+          setActiveNotes((prev) => {
+            const next = new Set(prev);
+            next.delete(note);
+            return next;
+          });
+
+          // Check if this was the last key being released
+          const remainingPressedKeys = new Set(pressedKeys);
+          remainingPressedKeys.delete(key);
+
+          // Only stop the arpeggiator if no more keys are pressed
+          if (remainingPressedKeys.size === 0) {
+            onKeyClick("");
+          }
         }
       } catch (e) {
         console.error("Error handling key release:", e);
       }
     },
-    [instrument, isLoaded, isStickyKeys, onKeyClick, activeNotes]
+    [instrument, isLoaded, isStickyKeys, onKeyClick, activeNotes, pressedKeys]
   );
+
+  // Generate keyboard mapping based on current octave
+  const getKeyboardMapping = useCallback(() => {
+    const mapping: { [key: string]: string } = {};
+
+    // White keys (natural notes)
+    const whiteKeys = ["a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'"];
+    const whiteNotes = ["C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F"];
+
+    whiteKeys.forEach((key, index) => {
+      const octaveOffset = Math.floor(index / 7); // C, D, E, F, G, A, B, then C again
+      const noteOctave = currentOctave + octaveOffset;
+      mapping[key] = `${whiteNotes[index]}${noteOctave}`;
+    });
+
+    // Black keys (sharp/flat notes)
+    const blackKeys = ["w", "e", "t", "y", "u", "o", "p", "["];
+    const blackNotes = ["C#", "D#", "F#", "G#", "A#", "C#", "D#", "F#"];
+
+    blackKeys.forEach((key, index) => {
+      const octaveOffset = Math.floor(index / 5); // C#, D#, F#, G#, A#, then C# again
+      const noteOctave = currentOctave + octaveOffset;
+      mapping[key] = `${blackNotes[index]}${noteOctave}`;
+    });
+
+    // Alternative mappings for some keys
+    const altWhiteKeys = ["z", "x", "c", "v", "b", "n", "m"];
+    const altWhiteNotes = ["C", "D", "E", "F", "G", "A", "B"];
+
+    altWhiteKeys.forEach((key, index) => {
+      mapping[key] = `${altWhiteNotes[index]}${currentOctave}`;
+    });
+
+    const altBlackKeys = ["q", "r", "5", "6", "7", "i", "9", "0"];
+    const altBlackNotes = ["C#", "D#", "F#", "G#", "A#", "C#", "D#", "F#"];
+
+    altBlackKeys.forEach((key, index) => {
+      const octaveOffset = Math.floor(index / 5);
+      const noteOctave = currentOctave + octaveOffset;
+      mapping[key] = `${altBlackNotes[index]}${noteOctave}`;
+    });
+
+    return mapping;
+  }, [currentOctave]);
+
+  // Handle computer keyboard events
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      const keyboardMapping = getKeyboardMapping();
+      const note = keyboardMapping[key];
+
+      if (note && !pressedKeys.has(key)) {
+        event.preventDefault();
+        setPressedKeys((prev) => new Set(prev).add(key));
+        handleKeyPress(note);
+      } else if (OCTAVE_CONTROLS[key]) {
+        event.preventDefault();
+        if (OCTAVE_CONTROLS[key] === "increment" && currentOctave < 6) {
+          setCurrentOctave((prev) => prev + 1);
+        } else if (OCTAVE_CONTROLS[key] === "decrement" && currentOctave > 2) {
+          setCurrentOctave((prev) => prev - 1);
+        }
+      }
+    },
+    [pressedKeys, handleKeyPress, getKeyboardMapping, currentOctave]
+  );
+
+  const handleKeyUp = useCallback(
+    (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      const keyboardMapping = getKeyboardMapping();
+      const note = keyboardMapping[key];
+
+      if (note && pressedKeys.has(key)) {
+        event.preventDefault();
+        setPressedKeys((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(key);
+          return newSet;
+        });
+        handleKeyRelease(note, key);
+      }
+    },
+    [pressedKeys, handleKeyRelease, getKeyboardMapping]
+  );
+
+  // Add keyboard event listeners
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [handleKeyDown, handleKeyUp]);
 
   // Release all notes when unmounting or changing instruments
   useEffect(() => {
@@ -184,7 +321,6 @@ const Keyboard = ({
 
         // Start audio context
         await Tone.start();
-        console.log("Audio context started");
       } catch (e) {
         console.error("Error initializing instrument:", e);
         setIsLoaded(true);
@@ -221,65 +357,15 @@ const Keyboard = ({
     }
   };
 
-  const toggleStickyKeys = () => {
-    setIsStickyKeys(!isStickyKeys);
-    if (isStickyKeys) {
+  function toggleStickyKeys(checked: boolean) {
+    setIsStickyKeys(checked);
+    if (!checked) {
       // When turning off sticky keys, release any held note
       setStickyNote(null);
       onKeyClick("");
     }
-  };
+  }
 
-  const WhiteKey = React.memo(
-    ({
-      isActive,
-      onPointerDown,
-      onPointerUp,
-    }: {
-      isActive: boolean;
-      onPointerDown: () => void;
-      onPointerUp: () => void;
-    }) => (
-      <div
-        className={`${styles.whiteKey} ${
-          isActive ? styles.whiteKeyActive : ""
-        }`}
-        onPointerDown={onPointerDown}
-        onPointerUp={onPointerUp}
-      />
-    )
-  );
-
-  const BlackKey = React.memo(
-    ({
-      isActive,
-      position,
-      width,
-      onPointerDown,
-      onPointerUp,
-      onPointerEnter,
-      onPointerLeave,
-    }: {
-      isActive: boolean;
-      position: number;
-      width: number;
-      onPointerDown: () => void;
-      onPointerUp: () => void;
-      onPointerEnter: () => void;
-      onPointerLeave: () => void;
-    }) => (
-      <div
-        className={`${styles.blackKey} ${
-          isActive ? styles.blackKeyActive : ""
-        }`}
-        style={{ left: `${position}%`, width: `${width}%` }}
-        onPointerDown={onPointerDown}
-        onPointerUp={onPointerUp}
-        onPointerEnter={onPointerEnter}
-        onPointerLeave={onPointerLeave}
-      />
-    )
-  );
   const renderWhiteKeys = useCallback(() => {
     return keys
       .filter((key) => !key.isSharp)
@@ -292,11 +378,11 @@ const Keyboard = ({
             onPointerDown={() => {
               handleKeyPress(key.note);
             }}
-            onPointerUp={() => handleKeyRelease(key.note)}
+            onPointerUp={() => handleKeyRelease(key.note, "")}
           />
         );
       });
-  }, [keys, activeKeys, WhiteKey, handleKeyPress, handleKeyRelease]);
+  }, [keys, activeKeys, handleKeyPress, handleKeyRelease]);
 
   const renderBlackKeys = useCallback(() => {
     const whiteKeyWidth = 100 / keys.filter((key) => !key.isSharp).length;
@@ -320,7 +406,7 @@ const Keyboard = ({
             onPointerDown={() => {
               handleKeyPress(key.note);
             }}
-            onPointerUp={() => handleKeyRelease(key.note)}
+            onPointerUp={() => handleKeyRelease(key.note, "")}
             onPointerEnter={() => {
               // Optional: Add hover behavior here if needed
             }}
@@ -330,7 +416,7 @@ const Keyboard = ({
           />
         );
       });
-  }, [keys, activeKeys, BlackKey, handleKeyPress, handleKeyRelease]);
+  }, [keys, activeKeys, handleKeyPress, handleKeyRelease]);
 
   // Expose the playNote method to parent components via ref
   useImperativeHandle(ref, () => ({
@@ -339,15 +425,12 @@ const Keyboard = ({
 
   return (
     <div className={styles.keyboardContainer}>
-      <Button
-        className={`${styles.button} ${
-          isStickyKeys ? styles.buttonActive : ""
-        }`}
-        onClick={toggleStickyKeys}
-        aria-pressed={isStickyKeys}
-      >
-        Hold
-      </Button>
+      <KeyboardControls
+        isStickyKeys={isStickyKeys}
+        currentOctave={currentOctave}
+        onToggleStickyKeys={toggleStickyKeys}
+        onOctaveChange={setCurrentOctave}
+      />
       <div className={styles.keyboard}>
         <div className={styles.pianoKeys}>
           <div className={styles.leftShadow} />
@@ -356,8 +439,15 @@ const Keyboard = ({
           {renderBlackKeys()}
         </div>
       </div>
+      <div className={styles.keyboardHelp}>
+        <small>
+          Use computer keyboard: A S D F G H J K L ; ' (white keys) | W E T Y U
+          O P [ (black keys) | <strong>Octave {currentOctave}</strong> (+/- or
+          Z/X to change)
+        </small>
+      </div>
     </div>
   );
-};
+}
 
 export default Keyboard;

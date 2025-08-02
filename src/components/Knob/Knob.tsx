@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import styles from "./Knob.module.css";
 
-interface KnobProps {
+type KnobProps = {
   value: number;
   min: number;
   max: number;
@@ -10,7 +10,7 @@ interface KnobProps {
   unit?: string;
   onChange: (value: number) => void;
   disabled?: boolean;
-}
+};
 
 function Knob({
   value,

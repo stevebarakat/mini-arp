@@ -1,6 +1,5 @@
 import { EFFECT_PARAM_RANGES } from "../../constants";
 import Knob from "../Knob";
-import "@/styles/effects.css";
 
 type DelayControlProps = {
   delayTime: number;
@@ -9,8 +8,8 @@ type DelayControlProps = {
   onDelayTimeChange: (delayTime: number) => void;
   onFeedbackChange: (feedback: number) => void;
   onWetChange: (wet: number) => void;
-  enabled: boolean;
-  onToggle: (enabled: boolean) => void;
+  enabled?: boolean;
+  onToggle?: (enabled: boolean) => void;
 };
 
 function DelayControl({

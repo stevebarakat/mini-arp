@@ -3,11 +3,12 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .knob {
-  width: 60px;
-  height: 60px;
+  width: var(--knob-size, 60px);
+  height: var(--knob-size, 60px);
   border-radius: 50%;
   background: hsl(220, 13%, 18%);
   border: 2px solid hsl(220, 13%, 25%);
@@ -44,4 +45,43 @@
   font-size: 0.875rem;
   color: hsl(220, 13%, 90%);
   user-select: none;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 767px) {
+  .knobContainer {
+    gap: 0.25rem;
+  }
+
+  .knob::before {
+    width: 3px;
+    height: 16px;
+  }
+
+  .knobLabel {
+    font-size: 0.75rem;
+  }
+
+  .knobValue {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .knobContainer {
+    gap: 0.125rem;
+  }
+
+  .knob::before {
+    width: 2px;
+    height: 12px;
+  }
+
+  .knobLabel {
+    font-size: 0.625rem;
+  }
+
+  .knobValue {
+    font-size: 0.625rem;
+  }
 }

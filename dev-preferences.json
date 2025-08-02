@@ -1,14 +1,26 @@
 {
   "styling": {
     "colors": "hsl",
-    "cssFramework": "css-modules"
+    "cssFramework": "css-modules",
+    "respectGlobalStyles": true
   },
   "codeGeneration": {
     "avoidPackages": ["tailwindcss"],
-    "preferredPackages": ["xstate", "zod", "react-router-dom"]
+    "preferredPackages": [
+      "postcss",
+      "autoprefixer",
+      "postcss-preset-env",
+      "stylelint",
+      "stylelint-order",
+      "stylelint-config-standard",
+      "react-router-dom",
+      "xstate",
+      "zod"
+    ]
   },
   "documentation": {
-    "includeComments": false
+    "includeComments": false,
+    "preferDescriptiveFunctionNames": true
   },
   "typescript": {
     "preferTypes": true,
@@ -19,5 +31,25 @@
   },
   "ui": {
     "iconLibrary": "lucide"
+  },
+  "programming": {
+    "paradigm": "functional",
+    "preferImmutability": true,
+    "preferPureFunctions": true,
+    "avoidSideEffects": true
+  },
+  "principles": {
+    "singleResponsibility": {
+      "enforceComponentSeparation": true,
+      "maxComponentLines": 200,
+      "maxFunctionLines": 50,
+      "preferPureFunctions": true
+    }
+  },
+  "structure": {
+    "colocateFiles": true,
+    "colocationDescription": "Whenever possible, place related files (component, styles, tests, hooks, types, audio, store, utils, etc.) in the same directory to improve discoverability and maintainability.",
+    "indexFileForComponents": true,
+    "indexFileDescription": "Each component directory should include an index.ts file that re-exports the default component (e.g., export { default } from './ComponentName';) to enable cleaner and more consistent imports."
   }
 }
