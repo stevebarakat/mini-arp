@@ -39,6 +39,9 @@ function App() {
   // Add state for active keys
   const [activeKeys, setActiveKeys] = useState<string[]>([]);
 
+  // Add state for arpeggiator mode
+  const [isArpeggiatorMode, setIsArpeggiatorMode] = useState(false);
+
   // Initialize effects when the app starts
   useEffect(() => {
     effectsSend({ type: "INIT_EFFECTS" });
@@ -100,30 +103,6 @@ function App() {
 
   function updatePitch(newPitch: number) {
     sequencerSend({ type: "UPDATE_PITCH", pitch: newPitch });
-  }
-
-  async function setRootNote(note: string) {
-    // First set the root note in the machine
-    sequencerSend({ type: "SET_ROOT_NOTE", note });
-
-    // If we're playing, stop and restart the sequence with the new root note
-    if (sequencerState.matches("playing" as SequencerStateValue)) {
-      // Stop the current sequence
-      sequencerSend({ type: "STOP" });
-
-      // Wait a bit for the sequence to stop completely
-      await new Promise(function (resolve) {
-        setTimeout(resolve, 100);
-      });
-
-      // Start a new sequence with the updated root note
-      try {
-        await Tone.start();
-        sequencerSend({ type: "PLAY" });
-      } catch (error) {
-        console.error("Error restarting sequence:", error);
-      }
-    }
   }
 
   // Filter effect handlers
@@ -206,17 +185,28 @@ function App() {
   function handleKeyClick(note: string) {
     if (note) {
       // Only handle actual notes, not empty strings
-      setRootNote(note);
-      setActiveKeys([note]); // Update to the current active note
-      if (!sequencerState.matches("playing")) {
+      if (sequencerState.matches("playing")) {
+        if (isArpeggiatorMode) {
+          // If arpeggiator mode is enabled, transpose without stopping
+          sequencerSend({ type: "TRANSPOSE_TO_NOTE", note });
+        } else {
+          // If arpeggiator mode is disabled, restart the sequence
+          sequencerSend({ type: "STOP" });
+          setTimeout(() => {
+            sequencerSend({ type: "SET_ROOT_NOTE", note });
+            sequencerSend({ type: "PLAY" });
+          }, 100);
+        }
+      } else {
+        // If stopped, set the root note and start playing
+        sequencerSend({ type: "SET_ROOT_NOTE", note });
         togglePlayback();
       }
+      setActiveKeys([note]); // Update to the current active note
     } else {
-      // When note is empty string (key release), clear active keys and stop sequencer
+      // When note is empty string (key release), just clear active keys
+      // Don't stop the sequence - let it continue playing
       setActiveKeys([]);
-      if (sequencerState.matches("playing")) {
-        sequencerSend({ type: "STOP" });
-      }
     }
   }
 
@@ -269,7 +259,12 @@ function App() {
             </div>
           </div>
         </div>
-        <Keyboard activeKeys={activeKeys} onKeyClick={handleKeyClick} />
+        <Keyboard
+          activeKeys={activeKeys}
+          onKeyClick={handleKeyClick}
+          isArpeggiatorMode={isArpeggiatorMode}
+          onToggleArpeggiatorMode={setIsArpeggiatorMode}
+        />
       </div>
     </div>
   );

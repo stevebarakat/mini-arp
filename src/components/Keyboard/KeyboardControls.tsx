@@ -8,6 +8,8 @@ type KeyboardControlsProps = {
   currentOctave: number;
   onToggleStickyKeys: (checked: boolean) => void;
   onOctaveChange: (octave: number) => void;
+  isArpeggiatorMode: boolean;
+  onToggleArpeggiatorMode: (checked: boolean) => void;
 };
 
 function KeyboardControls({
@@ -15,12 +17,22 @@ function KeyboardControls({
   currentOctave,
   onToggleStickyKeys,
   onOctaveChange,
+  isArpeggiatorMode,
+  onToggleArpeggiatorMode,
 }: KeyboardControlsProps) {
   return (
     <div className={styles.keyboardControls}>
-      <Switch checked={isStickyKeys} onCheckedChange={onToggleStickyKeys}>
-        Sticky Keys
-      </Switch>
+      <div className={styles.switchGroup}>
+        <Switch checked={isStickyKeys} onCheckedChange={onToggleStickyKeys}>
+          Sticky Keys
+        </Switch>
+        <Switch
+          checked={isArpeggiatorMode}
+          onCheckedChange={onToggleArpeggiatorMode}
+        >
+          Arpeggiator Mode
+        </Switch>
+      </div>
       <div className={styles.octaveControl}>
         <Button
           className={styles.octaveButton}

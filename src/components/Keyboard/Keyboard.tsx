@@ -16,6 +16,8 @@ type KeyboardProps = {
   octaveRange?: { min: number; max: number };
   onKeyClick?: (note: string) => void;
   instrumentType?: string;
+  isArpeggiatorMode?: boolean;
+  onToggleArpeggiatorMode?: (checked: boolean) => void;
   ref?: React.RefObject<{
     playNote: (note: string) => void;
   }>;
@@ -39,6 +41,8 @@ function Keyboard({
   octaveRange = { min: 4, max: 5 },
   onKeyClick = () => {},
   instrumentType = INSTRUMENT_TYPES.SYNTH,
+  isArpeggiatorMode = false,
+  onToggleArpeggiatorMode = () => {},
   ref,
 }: KeyboardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -223,22 +227,7 @@ function Keyboard({
       mapping[key] = `${blackNotes[index]}${noteOctave}`;
     });
 
-    // Alternative mappings for some keys
-    const altWhiteKeys = ["z", "x", "c", "v", "b", "n", "m"];
-    const altWhiteNotes = ["C", "D", "E", "F", "G", "A", "B"];
-
-    altWhiteKeys.forEach((key, index) => {
-      mapping[key] = `${altWhiteNotes[index]}${currentOctave}`;
-    });
-
-    const altBlackKeys = ["q", "r", "5", "6", "7", "i", "9", "0"];
-    const altBlackNotes = ["C#", "D#", "F#", "G#", "A#", "C#", "D#", "F#"];
-
-    altBlackKeys.forEach((key, index) => {
-      const octaveOffset = Math.floor(index / 5);
-      const noteOctave = currentOctave + octaveOffset;
-      mapping[key] = `${altBlackNotes[index]}${noteOctave}`;
-    });
+    // Note: z and x are reserved for octave control
 
     return mapping;
   }, [currentOctave]);
@@ -250,18 +239,19 @@ function Keyboard({
       const keyboardMapping = getKeyboardMapping();
       const note = keyboardMapping[key];
 
-      if (note && !pressedKeys.has(key)) {
-        event.preventDefault();
-        setPressedKeys((prev) => new Set(prev).add(key));
-
-        handleKeyPress(note);
-      } else if (OCTAVE_CONTROLS[key]) {
+      // Check octave controls first
+      if (OCTAVE_CONTROLS[key]) {
         event.preventDefault();
         if (OCTAVE_CONTROLS[key] === "increment" && currentOctave < 6) {
           setCurrentOctave((prev) => prev + 1);
         } else if (OCTAVE_CONTROLS[key] === "decrement" && currentOctave > 2) {
           setCurrentOctave((prev) => prev - 1);
         }
+      } else if (note && !pressedKeys.has(key)) {
+        event.preventDefault();
+        setPressedKeys((prev) => new Set(prev).add(key));
+
+        handleKeyPress(note);
       }
     },
     [pressedKeys, handleKeyPress, getKeyboardMapping, currentOctave]
@@ -442,6 +432,8 @@ function Keyboard({
         currentOctave={currentOctave}
         onToggleStickyKeys={toggleStickyKeys}
         onOctaveChange={setCurrentOctave}
+        isArpeggiatorMode={isArpeggiatorMode}
+        onToggleArpeggiatorMode={onToggleArpeggiatorMode}
       />
       <div className={styles.keyboard}>
         <div className={styles.pianoKeys}>

@@ -76,6 +76,7 @@ type SequencerEvent =
   | { type: "UPDATE_PITCH"; pitch: number }
   | { type: "SET_GRID"; grid: Grid }
   | { type: "SET_ROOT_NOTE"; note: string }
+  | { type: "TRANSPOSE_TO_NOTE"; note: string }
   | { type: "UPDATE_TEMPO"; tempo: number }
   | { type: "TOGGLE_CELL"; rowIndex: number; colIndex: number }
   | { type: "TOGGLE_HI_HAT"; step: number }
@@ -182,6 +183,13 @@ export const sequencerMachine = setup({
             }),
           ],
         },
+        TRANSPOSE_TO_NOTE: {
+          actions: [
+            assign({
+              rootNote: ({ event }) => event.note,
+            }),
+          ],
+        },
         UPDATE_TEMPO: {
           actions: [
             assign({
@@ -254,7 +262,6 @@ export const sequencerMachine = setup({
         },
         assign({
           sequence: ({ context }) => {
-
             // Create a new sequence
             const seq = new Tone.Sequence(
               (time, step) => {
@@ -373,6 +380,58 @@ export const sequencerMachine = setup({
             assign({
               rootNote: ({ event }) => event.note,
             }),
+          ],
+        },
+        TRANSPOSE_TO_NOTE: {
+          actions: [
+            assign({
+              rootNote: ({ event }) => event.note,
+            }),
+            ({ context }) => {
+              // Recreate the sequence with the new root note
+              if (context.sequence) {
+                context.sequence.dispose();
+                const seq = new Tone.Sequence(
+                  (time, step) => {
+                    // Play melodic pattern
+                    context.grid.forEach((row, rowIndex) => {
+                      if (row[step % 8]) {
+                        // Calculate the note to play based on the root note and row
+                        const baseNote = NOTES[rowIndex];
+                        const patternInterval = calculateSemitones(
+                          "C4",
+                          baseNote
+                        );
+                        const noteToPlay = transposeNote(
+                          context.rootNote, // Use the updated root note from context
+                          patternInterval + context.pitch
+                        );
+
+                        // Play the note
+                        if (context.synth) {
+                          context.synth.triggerAttackRelease(
+                            noteToPlay,
+                            "8n",
+                            time
+                          );
+                        }
+                      }
+                    });
+
+                    // Play hi-hat pattern
+                    if (context.hiHatPattern[step] && context.noiseSynth) {
+                      context.noiseSynth.triggerAttackRelease("8n", time);
+                    }
+                  },
+                  Array.from({ length: 8 }, (_, i) => i),
+                  "8n"
+                );
+
+                // Start the sequence from the current position
+                seq.start(0);
+                context.sequence = seq;
+              }
+            },
           ],
         },
         UPDATE_TEMPO: {

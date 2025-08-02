@@ -160,6 +160,12 @@
   gap: 0.5rem;
 }
 
+.switchGroup {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 .octaveControl {
   display: flex;
   align-items: center;
