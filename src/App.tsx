@@ -1,5 +1,12 @@
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
-import { useMachine } from "@xstate/react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  lazy,
+  Suspense,
+  useCallback,
+} from "react";
+import { useMachine, useSelector } from "@xstate/react";
 import { start } from "tone";
 import { sequencerMachine, effectsMachine, EffectType } from "./machines";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -12,32 +19,91 @@ const PitchControl = lazy(() => import("./components/PitchControl"));
 const Keyboard = lazy(() => import("./components/Keyboard"));
 const EffectsTabs = lazy(() => import("./components/EffectsTabs"));
 
-// Define the state values type for type safety
-type SequencerStateValue = "playing" | "stopped";
-
 function App() {
-  const [sequencerState, sequencerSend] = useMachine(sequencerMachine);
-  const [effectsState, effectsSend] = useMachine(effectsMachine);
+  const [, sequencerSend, sequencerActorRef] = useMachine(sequencerMachine);
+  const [, effectsSend, effectsActorRef] = useMachine(effectsMachine);
   const isConnectedRef = useRef(false);
 
-  const { grid, tempo, pitch, currentStep, synth, hiHatPattern } =
-    sequencerState.context;
+  // Use selectors to avoid unnecessary re-renders
+  const isEffectsActive = useSelector(effectsActorRef, (state) =>
+    state.matches("active")
+  );
+  const hasEffectsBus = useSelector(
+    effectsActorRef,
+    (state) => !!state.context.effectsBus
+  );
+  const effectsContext = useSelector(effectsActorRef, (state) => state.context);
 
-  const {
-    filterFrequency,
-    filterDepth,
-    filterWet,
-    filterResonance,
-    delayTime,
-    delayFeedback,
-    delayWet,
-    reverbDecay,
-    reverbPreDelay,
-    reverbWet,
-    distortionAmount,
-    distortionWet,
-    activeEffects,
-  } = effectsState.context;
+  // Sequencer state selectors
+  const isPlaying = useSelector(sequencerActorRef, (state) =>
+    state.matches("playing")
+  );
+  const grid = useSelector(sequencerActorRef, (state) => state.context.grid);
+  const tempo = useSelector(sequencerActorRef, (state) => state.context.tempo);
+  const pitch = useSelector(sequencerActorRef, (state) => state.context.pitch);
+  const currentStep = useSelector(
+    sequencerActorRef,
+    (state) => state.context.currentStep
+  );
+  const synth = useSelector(sequencerActorRef, (state) => state.context.synth);
+  const hiHatPattern = useSelector(
+    sequencerActorRef,
+    (state) => state.context.hiHatPattern
+  );
+
+  // Effects state selectors
+  const filterFrequency = useSelector(
+    effectsActorRef,
+    (state) => state.context.filterFrequency
+  );
+  const filterDepth = useSelector(
+    effectsActorRef,
+    (state) => state.context.filterDepth
+  );
+  const filterWet = useSelector(
+    effectsActorRef,
+    (state) => state.context.filterWet
+  );
+  const filterResonance = useSelector(
+    effectsActorRef,
+    (state) => state.context.filterResonance
+  );
+  const delayTime = useSelector(
+    effectsActorRef,
+    (state) => state.context.delayTime
+  );
+  const delayFeedback = useSelector(
+    effectsActorRef,
+    (state) => state.context.delayFeedback
+  );
+  const delayWet = useSelector(
+    effectsActorRef,
+    (state) => state.context.delayWet
+  );
+  const reverbDecay = useSelector(
+    effectsActorRef,
+    (state) => state.context.reverbDecay
+  );
+  const reverbPreDelay = useSelector(
+    effectsActorRef,
+    (state) => state.context.reverbPreDelay
+  );
+  const reverbWet = useSelector(
+    effectsActorRef,
+    (state) => state.context.reverbWet
+  );
+  const distortionAmount = useSelector(
+    effectsActorRef,
+    (state) => state.context.distortionAmount
+  );
+  const distortionWet = useSelector(
+    effectsActorRef,
+    (state) => state.context.distortionWet
+  );
+  const activeEffects = useSelector(
+    effectsActorRef,
+    (state) => state.context.activeEffects
+  );
 
   // Add state for active keys
   const [activeKeys, setActiveKeys] = useState<string[]>([]);
@@ -50,14 +116,8 @@ function App() {
     effectsSend({ type: "INIT_EFFECTS" });
   }, [effectsSend]);
 
-  // Connect the sequencer to the effects when both are initialized
   useEffect(() => {
-    if (
-      synth &&
-      effectsState.context.effectsBus &&
-      !isConnectedRef.current &&
-      effectsState.matches("active")
-    ) {
+    if (synth && hasEffectsBus && !isConnectedRef.current && isEffectsActive) {
       // Set the ref to prevent multiple connections
       isConnectedRef.current = true;
 
@@ -65,25 +125,19 @@ function App() {
       setTimeout(() => {
         sequencerSend({
           type: "CONNECT_TO_EFFECTS",
-          effectsContext: effectsState.context,
+          effectsContext: effectsContext,
         });
       }, 200);
     }
 
     // Reset the connection flag if either the synth or effects bus is removed
-    if (!synth || !effectsState.context.effectsBus) {
+    if (!synth || !hasEffectsBus) {
       isConnectedRef.current = false;
     }
-  }, [
-    synth,
-    effectsState.context.effectsBus,
-    sequencerSend,
-    effectsState.matches,
-    effectsState,
-  ]);
+  }, [synth, hasEffectsBus, sequencerSend, isEffectsActive, effectsContext]);
 
-  async function togglePlayback() {
-    if (sequencerState.matches("playing" as SequencerStateValue)) {
+  const togglePlayback = useCallback(async () => {
+    if (isPlaying) {
       sequencerSend({ type: "STOP" });
     } else {
       try {
@@ -94,7 +148,7 @@ function App() {
         sequencerSend({ type: "STOP" });
       }
     }
-  }
+  }, [isPlaying, sequencerSend]);
 
   function toggleCell(rowIndex: number, colIndex: number) {
     sequencerSend({ type: "TOGGLE_CELL", rowIndex, colIndex });
@@ -185,33 +239,44 @@ function App() {
     sequencerSend({ type: "TOGGLE_HI_HAT", step });
   }
 
-  function handleKeyClick(note: string) {
-    if (note) {
-      // Only handle actual notes, not empty strings
-      if (sequencerState.matches("playing")) {
-        if (isArpeggiatorMode) {
-          // If arpeggiator mode is enabled, transpose without stopping
-          sequencerSend({ type: "TRANSPOSE_TO_NOTE", note });
+  const handleKeyClick = useCallback(
+    (note: string) => {
+      if (note) {
+        // Only handle actual notes, not empty strings
+        if (isPlaying) {
+          if (isArpeggiatorMode) {
+            // If arpeggiator mode is enabled, transpose without stopping
+            sequencerSend({ type: "TRANSPOSE_TO_NOTE", note });
+          } else {
+            // If arpeggiator mode is disabled, restart the sequence
+            sequencerSend({ type: "STOP" });
+            setTimeout(() => {
+              sequencerSend({ type: "SET_ROOT_NOTE", note });
+              sequencerSend({ type: "PLAY" });
+            }, 100);
+          }
         } else {
-          // If arpeggiator mode is disabled, restart the sequence
-          sequencerSend({ type: "STOP" });
-          setTimeout(() => {
-            sequencerSend({ type: "SET_ROOT_NOTE", note });
-            sequencerSend({ type: "PLAY" });
-          }, 100);
+          // If stopped, set the root note and start playing
+          sequencerSend({ type: "SET_ROOT_NOTE", note });
+          togglePlayback();
         }
+        setActiveKeys([note]); // Update to the current active note
       } else {
-        // If stopped, set the root note and start playing
-        sequencerSend({ type: "SET_ROOT_NOTE", note });
-        togglePlayback();
+        // When note is empty string (key release), just clear active keys
+        // Don't stop the sequence - let it continue playing
+        setActiveKeys([]);
       }
-      setActiveKeys([note]); // Update to the current active note
-    } else {
-      // When note is empty string (key release), just clear active keys
-      // Don't stop the sequence - let it continue playing
-      setActiveKeys([]);
-    }
-  }
+    },
+    [isPlaying, sequencerSend, isArpeggiatorMode, togglePlayback]
+  );
+
+  const onStopArpeggiator = useCallback(() => {
+    sequencerSend({ type: "STOP" });
+  }, [sequencerSend]);
+
+  const handleToggleArpeggiatorMode = useCallback((checked: boolean) => {
+    setIsArpeggiatorMode(checked);
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -273,8 +338,8 @@ function App() {
             activeKeys={activeKeys}
             onKeyClick={handleKeyClick}
             isArpeggiatorMode={isArpeggiatorMode}
-            onToggleArpeggiatorMode={setIsArpeggiatorMode}
-            onStopArpeggiator={() => sequencerSend({ type: "STOP" })}
+            onToggleArpeggiatorMode={handleToggleArpeggiatorMode}
+            onStopArpeggiator={onStopArpeggiator}
           />
         </Suspense>
       </div>

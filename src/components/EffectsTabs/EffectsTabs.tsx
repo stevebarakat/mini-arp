@@ -74,11 +74,9 @@ function EffectsTabs({
       <Tabs.Root defaultValue="filter">
         <Tabs.List className={styles.tabsList}>
           <Tabs.Trigger className={styles.tabsTrigger} value="filter">
-            Filter{" "}
+            Filter
             <div
-              className={`ledIndicator ${
-                isEffectActive("autofilter") ? "active" : ""
-              }`}
+              className={`${isEffectActive("autofilter") ? "active" : ""}`}
             ></div>
             <label className="toggleSwitch">
               <input
@@ -91,11 +89,7 @@ function EffectsTabs({
           </Tabs.Trigger>
           <Tabs.Trigger className={styles.tabsTrigger} value="delay">
             Delay{" "}
-            <div
-              className={`ledIndicator ${
-                isEffectActive("delay") ? "active" : ""
-              }`}
-            ></div>
+            <div className={`${isEffectActive("delay") ? "active" : ""}`}></div>
             <label className="toggleSwitch">
               <input
                 type="checkbox"
@@ -108,9 +102,7 @@ function EffectsTabs({
           <Tabs.Trigger className={styles.tabsTrigger} value="reverb">
             Reverb{" "}
             <div
-              className={`ledIndicator ${
-                isEffectActive("reverb") ? "active" : ""
-              }`}
+              className={`${isEffectActive("reverb") ? "active" : ""}`}
             ></div>
             <label className="toggleSwitch">
               <input
@@ -124,9 +116,7 @@ function EffectsTabs({
           <Tabs.Trigger className={styles.tabsTrigger} value="distortion">
             Distortion{" "}
             <div
-              className={`ledIndicator ${
-                isEffectActive("distortion") ? "active" : ""
-              }`}
+              className={`${isEffectActive("distortion") ? "active" : ""}`}
             ></div>
             <label className="toggleSwitch">
               <input

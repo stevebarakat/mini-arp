@@ -35,7 +35,7 @@
   display: inline-block;
 }
 
-[data-state="active"] .ledIndicator {
+[data-state="active"] . {
   display: none;
 }
 

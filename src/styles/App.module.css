@@ -83,6 +83,7 @@
 @media (max-width: 865px) {
   :root {
     --knob-size: 35px;
+    --grid-cell-size: 28px;
     --touch-target-size: 44px;
   }
 
@@ -144,39 +145,6 @@
     flex-direction: row;
     flex-wrap: wrap;
   }
-}
-
-.toggleSlider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: hsl(220, 13%, 30%);
-  transition: 0.4s;
-  border-radius: 20px;
-  min-height: var(--touch-target-size);
-}
-
-.toggleSlider:before {
-  position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 2px;
-  bottom: 2px;
-  background-color: hsl(220, 13%, 90%);
-  transition: 0.4s;
-  border-radius: 50%;
-}
-
-input:checked + .toggleSlider {
-  background-color: hsl(220, 70%, 55%);
-}
-
-input:checked + .toggleSlider:before {
-  transform: translateX(20px);
 }
 
 .tabsList {

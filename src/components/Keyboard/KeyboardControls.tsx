@@ -1,6 +1,6 @@
 import React from "react";
-import Switch from "../Switch";
 import Button from "../Button";
+import Toggle from "./Toggle";
 import styles from "./Keyboard.module.css";
 
 type KeyboardControlsProps = {
@@ -23,15 +23,18 @@ function KeyboardControls({
   return (
     <div className={styles.keyboardControls}>
       <div className={styles.switchGroup}>
-        <Switch checked={isStickyKeys} onCheckedChange={onToggleStickyKeys}>
-          Sticky Keys
-        </Switch>
-        <Switch
+        <Toggle
+          checked={isStickyKeys}
+          onChange={onToggleStickyKeys}
+          label="Sticky Keys"
+          id="sticky-keys-toggle"
+        />
+        <Toggle
           checked={isArpeggiatorMode}
-          onCheckedChange={onToggleArpeggiatorMode}
-        >
-          Arpeggiator Mode
-        </Switch>
+          onChange={onToggleArpeggiatorMode}
+          label="Arpeggiator Mode"
+          id="arpeggiator-mode-toggle"
+        />
       </div>
       <div className={styles.octaveControl}>
         <Button

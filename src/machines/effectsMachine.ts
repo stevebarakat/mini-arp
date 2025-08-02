@@ -36,8 +36,7 @@ type EffectsEvent =
   | { type: "UPDATE_REVERB_WET"; wet: number }
   | { type: "UPDATE_DISTORTION_AMOUNT"; distortion: number }
   | { type: "UPDATE_DISTORTION_WET"; wet: number }
-  | { type: "TOGGLE_EFFECT"; effect: EffectType; enabled: boolean }
-  | { type: "CONNECT_INSTRUMENT"; instrument: any };
+  | { type: "TOGGLE_EFFECT"; effect: EffectType; enabled: boolean };
 
 // Define the context type for the effects machine
 export type EffectsContext = {
