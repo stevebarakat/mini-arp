@@ -8,22 +8,6 @@
   background: var(--color-off-black);
   box-shadow: 0 4px 6px -1px hsl(217deg 30% 25%),
     0 4px 6px -1px hsl(217deg 50% 10%);
-
-  &::before {
-    position: relative;
-    left: -175px;
-    z-index: 50;
-    display: flex;
-    width: calc(100% + 300px);
-    height: 12px;
-    background: linear-gradient(
-      180deg,
-      hsl(217deg 50% 20%),
-      hsl(217deg 10% 5%)
-    );
-    box-shadow: 0 5px 10px 0 hsl(0deg 0% 0% / 50%);
-    content: "";
-  }
 }
 
 .pianoKeys {

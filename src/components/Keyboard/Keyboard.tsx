@@ -7,6 +7,7 @@ import React, {
 import * as Tone from "tone";
 import { INSTRUMENT_TYPES } from "../../constants";
 import styles from "./Keyboard.module.css";
+import Button from "../Button";
 
 interface SharedKeyboardProps {
   activeKeys?: string[];
@@ -320,11 +321,11 @@ const Keyboard = ({
               handleKeyPress(key.note);
             }}
             onPointerUp={() => handleKeyRelease(key.note)}
-            onPointerEnter={function (): void {
-              throw new Error("Function not implemented.");
+            onPointerEnter={() => {
+              // Optional: Add hover behavior here if needed
             }}
-            onPointerLeave={function (): void {
-              throw new Error("Function not implemented.");
+            onPointerLeave={() => {
+              // Optional: Add hover behavior here if needed
             }}
           />
         );
@@ -338,13 +339,15 @@ const Keyboard = ({
 
   return (
     <div className={styles.keyboardContainer}>
-      <button
-        className={`button ${isStickyKeys ? "active" : ""}`}
+      <Button
+        className={`${styles.button} ${
+          isStickyKeys ? styles.buttonActive : ""
+        }`}
         onClick={toggleStickyKeys}
         aria-pressed={isStickyKeys}
       >
         Hold
-      </button>
+      </Button>
       <div className={styles.keyboard}>
         <div className={styles.pianoKeys}>
           <div className={styles.leftShadow} />
